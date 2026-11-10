@@ -1,0 +1,17 @@
+package com.yourlife.app
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val store = Store(applicationContext)
+        setContent {
+            YourLifeTheme {
+                YourLifeApp(store)
+            }
+        }
+    }
+}
