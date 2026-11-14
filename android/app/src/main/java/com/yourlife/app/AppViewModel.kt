@@ -93,6 +93,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var syncing by mutableStateOf(false)
         private set
 
+    var update by mutableStateOf<UpdateState>(UpdateState.Idle)
+        private set
+
     init {
         refreshHealth()
         checkUpdate()
@@ -115,9 +118,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---------- atualização do app ----------
-    var update by mutableStateOf<UpdateState>(UpdateState.Idle)
-        private set
-
     fun checkUpdate() {
         if (update is UpdateState.Checking || update is UpdateState.Downloading) return
         update = UpdateState.Checking
