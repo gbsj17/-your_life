@@ -292,6 +292,67 @@ ex('revplank',
      ln=('ik', 70, ANK, 1), lf=('ik', 72, ANK, 1), fn=90, ff=90))
 
 
+# ---- variações mais difíceis / novos exercícios
+
+# flexão com pés elevados (cadeira)
+def feet_push(theta, hand_x=61):
+    ankle = (10, 17.2)
+    legs = d(theta)
+    hip = (ankle[0] + 30 * legs[0], ankle[1] + 30 * legs[1])
+    return P(hip=hip, torso=theta, tilt=-8,
+             an=('ik', hand_x, 0, -1), af=('ik', hand_x + 2, 0, -1),
+             ln=('ik', ankle[0], ankle[1], 1), lf=('ik', ankle[0] + 2, ankle[1], 1), fn=-50, ff=-50)
+
+
+ex('pushup_feet', feet_push(6), feet_push(-8), [('rect', 2, 0, 16, 16)])
+
+# pike com pés elevados
+ex('pike_feet',
+   P(hip=(34.4, 38), torso=-44.8, tilt=-30,
+     an=('ik', 52, 0, 1), af=('ik', 54, 0, 1),
+     ln=('ik', 14, 17.2, 1), lf=('ik', 16, 17.2, 1), fn=-50, ff=-50),
+   P(hip=(34.4, 38), torso=-75, tilt=-35,
+     an=('ik', 52, 0, 1), af=('ik', 54, 0, 1),
+     ln=('ik', 14, 17.2, 1), lf=('ik', 16, 17.2, 1), fn=-50, ff=-50),
+   [('rect', 6, 0, 20, 16)])
+
+# agachamento com salto
+ex('jumpsquat',
+   P(hip=(31, 19), torso=60, an=('fk', 4, 0), af=('fk', 8, 4),
+     ln=('ik', 45, ANK, 1), lf=('ik', 48, ANK, 1)),
+   P(hip=(45, 33.5), torso=90, an=('fk', 35, 25), af=('fk', 40, 30),
+     ln=('ik', 45, 7.5, 1), lf=('ik', 48, 7.5, 1), fn=-45, ff=-45))
+
+# ponte com uma perna
+def bridge1(tor):
+    sh = (15, 5.0)
+    return P(shoulder=sh, torso=tor, tilt=-(tor - 180),
+             an=('fk', -4, -4), af=('fk', -2, -2),
+             ln=('ik', 53, ANK, 1), lf=('fk', 40, 40), fn=0, ff=-50)
+
+
+ex('bridge1', bridge1(184), bridge1(213))
+
+# abdominal bicicleta (de costas, cabeça à esquerda)
+def bicycle(near_in):
+    tuck = ('ik', 54, 19, 1)
+    reach = ('fk', 10, 8)
+    return P(hip=(50, 4), torso=160, tilt=10,
+             an=('head', -1, 3, 1), af=('head', 1, 4, 1),
+             ln=tuck if near_in else reach, lf=reach if near_in else tuck,
+             fn=0 if near_in else 98, ff=98 if near_in else 0)
+
+
+ex('bicycle', bicycle(True), bicycle(False))
+
+# tesoura (pernas alternadas, de costas)
+ex('flutter',
+   P(hip=(42, 4), torso=180, tilt=0, an=('fk', -4, -4), af=('fk', -2, -2),
+     ln=('fk', 32, 30), lf=('fk', 8, 6), fn=120, ff=98),
+   P(hip=(42, 4), torso=180, tilt=0, an=('fk', -4, -4), af=('fk', -2, -2),
+     ln=('fk', 8, 6), lf=('fk', 32, 30), fn=98, ff=120))
+
+
 # ---------------------------------------------------------------- saída
 def fmt(v):
     s = ('%.2f' % v).rstrip('0').rstrip('.')
@@ -341,6 +402,8 @@ def to_kotlin(path):
 
 
 def preview(outdir):
+    for _k, (_a, _b, _p) in EX.items():
+        harmonize(_a, _b)
     from PIL import Image, ImageDraw
     import os
     os.makedirs(outdir, exist_ok=True)

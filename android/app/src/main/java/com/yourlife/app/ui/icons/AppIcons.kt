@@ -95,6 +95,8 @@ object AppIcons {
 
     val Plus = icon("Plus", "M12 5 L12 19", "M5 12 L19 12")
 
+    val Minus = icon("Minus", "M5 12 L19 12")
+
     val Skip = icon("Skip", "M5 5 L13 12 L5 19 Z", "M18 5 L18 19")
 
     val Sun = icon(

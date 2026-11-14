@@ -9,7 +9,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.health.connect.client.HealthConnectClient
+import com.yourlife.app.data.Enrollment
 import com.yourlife.app.data.Exercise
+import com.yourlife.app.data.Level
+import com.yourlife.app.data.ProgramStatus
+import com.yourlife.app.data.Programs
 import com.yourlife.app.data.Plan
 import com.yourlife.app.data.PlanItem
 import com.yourlife.app.data.Session
@@ -23,9 +27,11 @@ import java.time.LocalDate
 
 sealed interface Route {
     data object Home : Route
+    data object Plans : Route
     data object Progress : Route
     data object Settings : Route
-    data class PlanDetail(val planId: String) : Route
+    data class PlanDetail(val planId: String, val level: Level = Level.MEDIO, val deload: Boolean = false) : Route
+    data class ProgramDetail(val programId: String) : Route
     data class Workout(val planId: String) : Route
 }
 
@@ -58,6 +64,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var workout by mutableStateOf<WorkoutState?>(null)
         private set
     var sheetExercise by mutableStateOf<Exercise?>(null)
+    var enrollment by mutableStateOf(store.enrollment())
+        private set
 
     /** Aumenta a cada alerta (fim de descanso/série) para a tela vibrar. */
     var cue by mutableIntStateOf(0)
@@ -86,9 +94,41 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun goBack(): Boolean {
         return when (route) {
             Route.Home -> false
-            is Route.PlanDetail, Route.Progress, Route.Settings -> { route = Route.Home; true }
+            is Route.ProgramDetail -> { route = Route.Plans; true }
+            is Route.PlanDetail, Route.Plans, Route.Progress, Route.Settings -> { route = Route.Home; true }
             is Route.Workout -> false // a tela do treino cuida do próprio "voltar"
         }
+    }
+
+    // ---------- programas ----------
+    /** Situação de hoje no programa ativo (calculada na hora, depende do dia). */
+    val programStatus: ProgramStatus? get() = enrollment?.let { Programs.status(it) }
+
+    fun enroll(programId: String, phaseDays: List<Int>) {
+        enrollment = Enrollment(programId, LocalDate.now().toEpochDay(), phaseDays, 0)
+        store.saveEnrollment(enrollment)
+    }
+
+    fun endProgram() {
+        enrollment = null
+        store.saveEnrollment(null)
+    }
+
+    /** Dias em cada nível do programa ativo, em passos de 7. Zero pula o nível. */
+    fun setPhaseDays(index: Int, days: Int) {
+        val e = enrollment ?: return
+        val list = e.phaseDays.toMutableList()
+        list[index] = days.coerceIn(0, 84)
+        if (list.sum() < 7) return
+        enrollment = e.copy(phaseDays = list)
+        store.saveEnrollment(enrollment)
+    }
+
+    /** Ajuste manual de dificuldade: -1 mais fácil, +1 mais difícil (em relação ao nível da fase). */
+    fun shiftLevel(delta: Int) {
+        val e = enrollment ?: return
+        enrollment = e.copy(levelOffset = (e.levelOffset + delta).coerceIn(-2, 2))
+        store.saveEnrollment(enrollment)
     }
 
     // ---------- ajustes ----------
@@ -153,8 +193,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun quitWorkout() {
         val planId = workout?.plan?.id
+        val level = workout?.plan?.level ?: Level.MEDIO
+        val deload = workout?.plan?.deload ?: false
         workout = null
-        route = if (planId != null) Route.PlanDetail(planId) else Route.Home
+        route = if (planId != null) Route.PlanDetail(planId, level, deload) else Route.Home
     }
 
     fun closeFinishedWorkout() {
@@ -240,7 +282,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             startTs = w.startedAt,
             ts = now,
             planId = w.plan.id,
-            name = w.plan.name,
+            name = if (w.plan.level == Level.MEDIO && !w.plan.deload) w.plan.name
+                else w.plan.name + " (" + w.plan.level.label + (if (w.plan.deload) ", leve" else "") + ")",
             seconds = seconds,
             synced = false
         )

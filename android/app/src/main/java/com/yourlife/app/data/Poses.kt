@@ -107,4 +107,34 @@ val ANIM_GEOMETRY: Map<String, AnimGeometry> = mapOf(
         b = floatArrayOf(42.7f, 13.6f, 155.7f, 18f, 23f, 0f, -1f, 21f, 0f, -1f, 70f, 1.2f, 1f, 72f, 1.2f, 1f, 90f, 90f),
         props = listOf()
     ),
+    "pushup_feet" to AnimGeometry(
+        a = floatArrayOf(39.84f, 20.34f, 6f, -8f, 61f, 0f, -1f, 63f, 0f, -1f, 10f, 17.2f, 1f, 12f, 17.2f, 1f, -50f, -50f),
+        b = floatArrayOf(39.71f, 13.02f, -8f, -8f, 61f, 0f, -1f, 63f, 0f, -1f, 10f, 17.2f, 1f, 12f, 17.2f, 1f, -50f, -50f),
+        props = listOf(Prop(0, 2f, 0f, 16f, 16f))
+    ),
+    "pike_feet" to AnimGeometry(
+        a = floatArrayOf(34.4f, 38f, -44.8f, -30f, 52f, 0f, 1f, 54f, 0f, 1f, 14f, 17.2f, 1f, 16f, 17.2f, 1f, -50f, -50f),
+        b = floatArrayOf(34.4f, 38f, -75f, -35f, 52f, 0f, 1f, 54f, 0f, 1f, 14f, 17.2f, 1f, 16f, 17.2f, 1f, -50f, -50f),
+        props = listOf(Prop(0, 6f, 0f, 20f, 16f))
+    ),
+    "jumpsquat" to AnimGeometry(
+        a = floatArrayOf(31f, 19f, 60f, 0f, 64.97f, 38.89f, 1f, 64.86f, 40.49f, 1f, 45f, 1.2f, 1f, 48f, 1.2f, 1f, 0f, 0f),
+        b = floatArrayOf(45f, 33.5f, 90f, 0f, 64.8f, 67.03f, 1f, 63.72f, 68.71f, 1f, 45f, 7.5f, 1f, 48f, 7.5f, 1f, -45f, -45f),
+        props = listOf()
+    ),
+    "bridge1" to AnimGeometry(
+        a = floatArrayOf(36.95f, 6.53f, 184f, -4f, 37.94f, 3.4f, -1f, 37.99f, 4.2f, -1f, 53f, 1.2f, 1f, 59.93f, 25.82f, 1f, 0f, -50f),
+        b = floatArrayOf(33.45f, 16.98f, 213f, -33f, 37.94f, 3.4f, -1f, 37.99f, 4.2f, -1f, 53f, 1.2f, 1f, 56.43f, 36.27f, 1f, 0f, -50f),
+        props = listOf()
+    ),
+    "bicycle" to AnimGeometry(
+        a = floatArrayOf(50f, 4f, 160f, 10f, 18.97f, 16.17f, 1f, 20.97f, 17.17f, 1f, 54f, 19f, 1f, 79.63f, 8.69f, 1f, 0f, 98f),
+        b = floatArrayOf(50f, 4f, 160f, 10f, 18.97f, 16.17f, 1f, 20.97f, 17.17f, 1f, 79.63f, 8.69f, 1f, 54f, 19f, 1f, 98f, 0f),
+        props = listOf()
+    ),
+    "flutter" to AnimGeometry(
+        a = floatArrayOf(42f, 4f, 180f, 0f, 42.94f, 2.4f, 1f, 42.99f, 3.2f, 1f, 67.71f, 19.45f, 1f, 71.77f, 7.66f, 1f, 120f, 98f),
+        b = floatArrayOf(42f, 4f, 180f, 0f, 42.94f, 2.4f, 1f, 42.99f, 3.2f, 1f, 71.77f, 7.66f, 1f, 67.71f, 19.45f, 1f, 98f, 120f),
+        props = listOf()
+    ),
 )

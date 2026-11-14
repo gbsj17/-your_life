@@ -43,7 +43,14 @@ import java.util.Locale
 @Composable
 fun HomeScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
     val today = LocalDate.now()
-    val suggested = Catalog.suggestionFor(today.dayOfWeek)
+    val status = vm.programStatus
+    val programPlan = status?.todayPlan
+    val suggested = programPlan ?: Catalog.suggestionFor(today.dayOfWeek)
+    val heroLabel = when {
+        programPlan != null -> "PLANO · DIA ${status?.dayNumber} DE ${status?.totalDays}"
+        status != null && !status.finished -> "DIA DE DESCANSO NO PLANO · SUGESTÃO LIVRE"
+        else -> "SUGESTÃO DE HOJE"
+    }
     val trainedToday = vm.history.any { it.date == today.toString() }
     val hour = LocalTime.now().hour
     val greeting = when {
@@ -69,7 +76,7 @@ fun HomeScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
                 )
             }
         }
-        item { HeroCard(suggested, trainedToday) { vm.route = Route.PlanDetail(suggested.id) } }
+        item { HeroCard(suggested, heroLabel, trainedToday) { vm.route = Route.PlanDetail(suggested.id, suggested.level, suggested.deload) } }
         item { WeekStrip(vm, today) }
         item { SectionTitle("Todos os treinos", Modifier.padding(top = 6.dp)) }
         items(Catalog.plans, key = { it.id }) { plan ->
@@ -79,7 +86,7 @@ fun HomeScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
 }
 
 @Composable
-private fun HeroCard(plan: Plan, trainedToday: Boolean, onClick: () -> Unit) {
+private fun HeroCard(plan: Plan, label: String, trainedToday: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(26.dp)
     Surface(onClick = onClick, shape = shape, color = Color.Transparent) {
         Box(
@@ -91,7 +98,7 @@ private fun HeroCard(plan: Plan, trainedToday: Boolean, onClick: () -> Unit) {
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    if (trainedToday) "SUGESTÃO DE HOJE · FEITO" else "SUGESTÃO DE HOJE",
+                    if (trainedToday) "$label · FEITO" else label,
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White.copy(alpha = 0.85f)
                 )
@@ -177,7 +184,7 @@ private fun PlanCard(plan: Plan, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                InfoChip(plan.level.label, highlight = plan.level.ordinal == 0)
+                InfoChip(plan.focus.take(2).joinToString(" · ") { it.label })
             }
             AppIcon(AppIcons.Chevron, tint = MaterialTheme.colorScheme.onSurfaceVariant, size = 20.dp)
         }

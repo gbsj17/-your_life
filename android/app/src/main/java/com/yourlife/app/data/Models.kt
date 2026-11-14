@@ -21,9 +21,15 @@ enum class Muscle(val label: String) {
     CARDIO("Cardio")
 }
 
+/** Os três níveis de dificuldade, em ordem crescente. */
 enum class Level(val label: String) {
     INICIANTE("Iniciante"),
-    INTERMEDIARIO("Intermediário")
+    MEDIO("Médio"),
+    AVANCADO("Avançado");
+
+    companion object {
+        fun clamp(index: Int): Level = entries[index.coerceIn(0, entries.size - 1)]
+    }
 }
 
 enum class PlanIcon { FLAME, DUMBBELL, BOLT, TARGET, SHIELD, PEAK }
@@ -53,6 +59,10 @@ class PlanItem(
     val target: String get() = if (seconds != null) "${seconds}s" else "$reps reps"
 }
 
+/**
+ * Um treino. Os planos do catálogo são escritos no nível Médio;
+ * `Plan.forLevel()` gera as versões Iniciante e Avançado.
+ */
 class Plan(
     val id: String,
     val name: String,
@@ -60,12 +70,44 @@ class Plan(
     val level: Level,
     val icon: PlanIcon,
     val focus: List<Muscle>,
-    val items: List<PlanItem>
+    val items: List<PlanItem>,
+    val combo: Boolean = false,
+    /** Semana leve (recuperação): menos séries. */
+    val deload: Boolean = false
 ) {
     /** Estimativa: 40 s por série de repetições; séries por tempo usam o próprio tempo. */
     val estMin: Int
         get() = Math.round(items.sumOf { it.sets * ((it.seconds ?: 40) + it.rest) } / 60f)
+
+    val totalSets: Int get() = items.sumOf { it.sets }
 }
+
+/** Uma fase do programa: quantos dias no nível e qual é a semana de treinos (segunda a domingo). */
+class ProgramPhase(
+    val level: Level,
+    val days: Int,
+    /** 7 posições, segunda a domingo; null = descanso. */
+    val week: List<String?>
+)
+
+class Program(
+    val id: String,
+    val name: String,
+    val goal: String,
+    val tagline: String,
+    val description: String,
+    val note: String?,
+    val icon: PlanIcon,
+    val phases: List<ProgramPhase>
+)
+
+/** O programa que o usuário está seguindo. */
+data class Enrollment(
+    val programId: String,
+    val startDay: Long,            // LocalDate.toEpochDay()
+    val phaseDays: List<Int>,      // dias em cada fase (iniciante, médio, avançado)
+    val levelOffset: Int = 0       // ajuste manual: -2..+2 níveis
+)
 
 data class Session(
     val id: Long,

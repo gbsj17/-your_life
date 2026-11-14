@@ -9,6 +9,7 @@ class Store(context: Context) {
     private val prefs = context.getSharedPreferences("yourlife", Context.MODE_PRIVATE)
     private val historyKey = "history.v1"
     private val settingsKey = "settings.v1"
+    private val enrollKey = "enrollment.v1"
 
     fun history(): List<Session> {
         val raw = prefs.getString(historyKey, null) ?: return emptyList()
@@ -75,5 +76,37 @@ class Store(context: Context) {
         prefs.edit()
             .putString(settingsKey, JSONObject().put("theme", s.theme).put("autoSync", s.autoSync).toString())
             .apply()
+    }
+
+    fun enrollment(): Enrollment? {
+        val raw = prefs.getString(enrollKey, null) ?: return null
+        return try {
+            val o = JSONObject(raw)
+            val arr = o.getJSONArray("phaseDays")
+            Enrollment(
+                programId = o.getString("programId"),
+                startDay = o.getLong("startDay"),
+                phaseDays = (0 until arr.length()).map { arr.getInt(it) },
+                levelOffset = o.optInt("levelOffset", 0)
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun saveEnrollment(e: Enrollment?) {
+        if (e == null) {
+            prefs.edit().remove(enrollKey).apply()
+            return
+        }
+        prefs.edit().putString(
+            enrollKey,
+            JSONObject()
+                .put("programId", e.programId)
+                .put("startDay", e.startDay)
+                .put("phaseDays", JSONArray(e.phaseDays))
+                .put("levelOffset", e.levelOffset)
+                .toString()
+        ).apply()
     }
 }

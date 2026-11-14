@@ -26,6 +26,8 @@ import com.yourlife.app.ui.icons.AppIcons
 import com.yourlife.app.ui.screens.ExerciseSheet
 import com.yourlife.app.ui.screens.HomeScreen
 import com.yourlife.app.ui.screens.PlanDetailScreen
+import com.yourlife.app.ui.screens.PlansScreen
+import com.yourlife.app.ui.screens.ProgramDetailScreen
 import com.yourlife.app.ui.screens.ProgressScreen
 import com.yourlife.app.ui.screens.SettingsScreen
 import com.yourlife.app.ui.screens.WorkoutScreen
@@ -38,7 +40,7 @@ fun YourLifeApp(vm: AppViewModel) {
     val route = vm.route
     BackHandler(enabled = route != Route.Home && route !is Route.Workout) { vm.goBack() }
 
-    val showBar = route == Route.Home || route == Route.Progress || route == Route.Settings
+    val showBar = route == Route.Home || route == Route.Plans || route == Route.Progress || route == Route.Settings
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -56,9 +58,11 @@ fun YourLifeApp(vm: AppViewModel) {
             ) { r ->
                 when (r) {
                     Route.Home -> HomeScreen(vm, padding)
+                    Route.Plans -> PlansScreen(vm, padding)
                     Route.Progress -> ProgressScreen(vm, padding)
                     Route.Settings -> SettingsScreen(vm, padding)
-                    is Route.PlanDetail -> PlanDetailScreen(vm, r.planId)
+                    is Route.PlanDetail -> PlanDetailScreen(vm, r.planId, r.level, r.deload)
+                    is Route.ProgramDetail -> ProgramDetailScreen(vm, r.programId)
                     is Route.Workout -> WorkoutScreen(vm)
                 }
             }
@@ -72,6 +76,7 @@ fun YourLifeApp(vm: AppViewModel) {
 private fun BottomBar(current: Route, onSelect: (Route) -> Unit) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         BarItem("Treinos", AppIcons.Dumbbell, current == Route.Home) { onSelect(Route.Home) }
+        BarItem("Planos", AppIcons.Calendar, current == Route.Plans) { onSelect(Route.Plans) }
         BarItem("Progresso", AppIcons.Chart, current == Route.Progress) { onSelect(Route.Progress) }
         BarItem("Ajustes", AppIcons.Sliders, current == Route.Settings) { onSelect(Route.Settings) }
     }

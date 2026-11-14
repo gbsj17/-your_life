@@ -33,7 +33,7 @@ object Catalog {
         Exercise(
             id = "bulgaro", name = "Agachamento búlgaro (cada lado)", anim = "bulgarian",
             muscles = listOf(Muscle.QUADRICEPS, Muscle.GLUTEOS),
-            level = Level.INTERMEDIARIO, phaseA = "Em cima", phaseB = "Embaixo",
+            level = Level.MEDIO, phaseA = "Em cima", phaseB = "Embaixo",
             equipment = "Cadeira ou sofá firme",
             steps = listOf(
                 "Apoie o peito do pé de trás na cadeira, de costas para ela.",
@@ -70,7 +70,7 @@ object Catalog {
         Exercise(
             id = "flexao", name = "Flexão de braços", anim = "pushup",
             muscles = listOf(Muscle.PEITO, Muscle.TRICEPS, Muscle.OMBROS),
-            level = Level.INTERMEDIARIO, phaseA = "Em cima", phaseB = "Embaixo",
+            level = Level.MEDIO, phaseA = "Em cima", phaseB = "Embaixo",
             steps = listOf(
                 "Mãos um pouco mais abertas que os ombros, corpo em linha reta da cabeça aos pés.",
                 "Contraia o abdômen e os glúteos.",
@@ -94,7 +94,7 @@ object Catalog {
         Exercise(
             id = "flexao-larga", name = "Flexão com mãos afastadas", anim = "pushup",
             muscles = listOf(Muscle.PEITO, Muscle.OMBROS),
-            level = Level.INTERMEDIARIO, phaseA = "Em cima", phaseB = "Embaixo",
+            level = Level.MEDIO, phaseA = "Em cima", phaseB = "Embaixo",
             steps = listOf(
                 "Afaste as mãos além da largura dos ombros, dedos para a frente.",
                 "Corpo em linha reta, abdômen contraído.",
@@ -106,7 +106,7 @@ object Catalog {
         Exercise(
             id = "flexao-diamante", name = "Flexão diamante", anim = "pushup",
             muscles = listOf(Muscle.TRICEPS, Muscle.PEITO),
-            level = Level.INTERMEDIARIO, phaseA = "Em cima", phaseB = "Embaixo",
+            level = Level.MEDIO, phaseA = "Em cima", phaseB = "Embaixo",
             steps = listOf(
                 "Junte as mãos sob o peito, formando um losango com polegares e indicadores.",
                 "Mantenha o corpo em linha reta.",
@@ -142,7 +142,7 @@ object Catalog {
         Exercise(
             id = "escalador", name = "Escalador", anim = "climber",
             muscles = listOf(Muscle.CARDIO, Muscle.ABDOMEN, Muscle.OMBROS),
-            level = Level.INTERMEDIARIO, phaseA = "Joelho direito", phaseB = "Joelho esquerdo", cycleMs = 600,
+            level = Level.MEDIO, phaseA = "Joelho direito", phaseB = "Joelho esquerdo", cycleMs = 600,
             steps = listOf(
                 "Posição de flexão, mãos sob os ombros.",
                 "Traga um joelho em direção ao peito.",
@@ -154,7 +154,7 @@ object Catalog {
         Exercise(
             id = "toque-ombro", name = "Prancha com toque no ombro", anim = "shouldertap",
             muscles = listOf(Muscle.ABDOMEN, Muscle.OMBROS),
-            level = Level.INTERMEDIARIO, phaseA = "Apoiado", phaseB = "Mão no ombro", cycleMs = 1100,
+            level = Level.MEDIO, phaseA = "Apoiado", phaseB = "Mão no ombro", cycleMs = 1100,
             steps = listOf(
                 "Posição de flexão, com os pés um pouco afastados para dar estabilidade.",
                 "Leve uma mão até o ombro oposto sem girar o quadril.",
@@ -190,7 +190,7 @@ object Catalog {
         Exercise(
             id = "mergulho", name = "Mergulho na cadeira", anim = "dip",
             muscles = listOf(Muscle.TRICEPS, Muscle.OMBROS, Muscle.PEITO),
-            level = Level.INTERMEDIARIO, phaseA = "Em cima", phaseB = "Embaixo",
+            level = Level.MEDIO, phaseA = "Em cima", phaseB = "Embaixo",
             equipment = "Cadeira firme, que não escorregue",
             steps = listOf(
                 "Sente na beirada da cadeira e apoie as mãos ao lado do quadril.",
@@ -203,7 +203,7 @@ object Catalog {
         Exercise(
             id = "pike", name = "Flexão pike", anim = "pike",
             muscles = listOf(Muscle.OMBROS, Muscle.TRICEPS),
-            level = Level.INTERMEDIARIO, phaseA = "Em cima", phaseB = "Embaixo",
+            level = Level.MEDIO, phaseA = "Em cima", phaseB = "Embaixo",
             steps = listOf(
                 "Mãos e pés no chão, quadril alto, formando um V invertido.",
                 "Flexione os cotovelos levando a cabeça em direção ao chão, entre as mãos.",
@@ -227,7 +227,7 @@ object Catalog {
         Exercise(
             id = "elevacao-pernas", name = "Elevação de pernas", anim = "legraise",
             muscles = listOf(Muscle.ABDOMEN),
-            level = Level.INTERMEDIARIO, phaseA = "Pernas no alto", phaseB = "Pernas baixas",
+            level = Level.MEDIO, phaseA = "Pernas no alto", phaseB = "Pernas baixas",
             steps = listOf(
                 "Deite de costas com os braços ao lado do corpo.",
                 "Com as pernas esticadas, suba até ficarem na vertical.",
@@ -276,7 +276,7 @@ object Catalog {
         Exercise(
             id = "remada", name = "Remada invertida na mesa", anim = "row",
             muscles = listOf(Muscle.COSTAS, Muscle.BICEPS, Muscle.OMBROS),
-            level = Level.INTERMEDIARIO, phaseA = "Braços esticados", phaseB = "Peito na mesa", cycleMs = 1500,
+            level = Level.MEDIO, phaseA = "Braços esticados", phaseB = "Peito na mesa", cycleMs = 1500,
             equipment = "Mesa bem firme e pesada",
             steps = listOf(
                 "Deite sob a mesa e segure a borda com as mãos, braços esticados.",
@@ -289,7 +289,7 @@ object Catalog {
         Exercise(
             id = "prancha-invertida", name = "Prancha invertida", anim = "revplank",
             muscles = listOf(Muscle.GLUTEOS, Muscle.POSTERIOR, Muscle.LOMBAR, Muscle.OMBROS),
-            level = Level.INTERMEDIARIO, phaseA = "Quadril baixo", phaseB = "Quadril alto", cycleMs = 1700,
+            level = Level.MEDIO, phaseA = "Quadril baixo", phaseB = "Quadril alto", cycleMs = 1700,
             steps = listOf(
                 "Sente com as pernas esticadas e as mãos no chão, atrás do quadril.",
                 "Eleve o quadril até o corpo formar uma linha reta.",
@@ -297,6 +297,93 @@ object Catalog {
                 "Segure o tempo indicado."
             ),
             mistakes = listOf("Quadril caindo.", "Ombros afundando em direção às orelhas.")
+        ),
+        Exercise(
+            id = "flexao-pes-elevados", name = "Flexão com pés elevados", anim = "pushup_feet",
+            muscles = listOf(Muscle.PEITO, Muscle.OMBROS, Muscle.TRICEPS),
+            level = Level.AVANCADO, phaseA = "Em cima", phaseB = "Embaixo",
+            equipment = "Cadeira ou degrau firme",
+            steps = listOf(
+                "Apoie os pés na cadeira e as mãos no chão, um pouco mais abertas que os ombros.",
+                "Corpo em linha reta, abdômen e glúteos contraídos.",
+                "Desça até o peito quase tocar o chão.",
+                "Empurre o chão para subir, sem travar os cotovelos."
+            ),
+            mistakes = listOf("Quadril caindo.", "Cabeça caindo para a frente.")
+        ),
+        Exercise(
+            id = "agachamento-salto", name = "Agachamento com salto", anim = "jumpsquat",
+            muscles = listOf(Muscle.QUADRICEPS, Muscle.GLUTEOS, Muscle.CARDIO),
+            level = Level.AVANCADO, phaseA = "Embaixo", phaseB = "No ar", cycleMs = 700,
+            steps = listOf(
+                "Agache como no agachamento comum, com o peito aberto.",
+                "Salte para cima com força, balançando os braços.",
+                "Aterrisse suave, amortecendo com os joelhos.",
+                "Volte direto para o próximo agachamento."
+            ),
+            mistakes = listOf("Joelhos para dentro na aterrissagem.", "Aterrissar com as pernas rígidas.")
+        ),
+        Exercise(
+            id = "pike-elevado", name = "Flexão pike com pés elevados", anim = "pike_feet",
+            muscles = listOf(Muscle.OMBROS, Muscle.TRICEPS),
+            level = Level.AVANCADO, phaseA = "Em cima", phaseB = "Embaixo",
+            equipment = "Cadeira ou degrau firme",
+            steps = listOf(
+                "Apoie os pés na cadeira e as mãos no chão, com o quadril bem alto.",
+                "Flexione os cotovelos levando a cabeça em direção ao chão, entre as mãos.",
+                "Mantenha o quadril alto durante todo o movimento.",
+                "Empurre o chão para voltar."
+            ),
+            mistakes = listOf("Quadril caindo.", "Cotovelos muito abertos.")
+        ),
+        Exercise(
+            id = "ponte-unilateral", name = "Ponte com uma perna (cada lado)", anim = "bridge1",
+            muscles = listOf(Muscle.GLUTEOS, Muscle.POSTERIOR, Muscle.LOMBAR),
+            level = Level.MEDIO, phaseA = "Deitado", phaseB = "Quadril alto",
+            steps = listOf(
+                "Deite de costas, com uma perna dobrada e a outra esticada no ar.",
+                "Eleve o quadril empurrando o calcanhar do pé apoiado.",
+                "Mantenha o quadril alinhado, sem girar para o lado.",
+                "Desça devagar e troque de perna ao terminar."
+            ),
+            mistakes = listOf("Quadril girando.", "Arquear a lombar para subir mais.")
+        ),
+        Exercise(
+            id = "bicicleta", name = "Abdominal bicicleta", anim = "bicycle",
+            muscles = listOf(Muscle.ABDOMEN),
+            level = Level.MEDIO, phaseA = "Joelho direito", phaseB = "Joelho esquerdo", cycleMs = 900,
+            steps = listOf(
+                "Deite de costas, com as mãos atrás da cabeça e os ombros levemente elevados.",
+                "Traga um joelho em direção ao peito e estique a outra perna.",
+                "Troque de lado como se pedalasse, girando o tronco.",
+                "Mantenha o ritmo controlado, sem puxar o pescoço."
+            ),
+            mistakes = listOf("Puxar o pescoço com as mãos.", "Ir rápido demais, sem girar o tronco.")
+        ),
+        Exercise(
+            id = "tesoura", name = "Tesoura (pernas alternadas)", anim = "flutter",
+            muscles = listOf(Muscle.ABDOMEN),
+            level = Level.INICIANTE, phaseA = "Perna direita", phaseB = "Perna esquerda", cycleMs = 700,
+            steps = listOf(
+                "Deite de costas, com as mãos ao lado do corpo.",
+                "Eleve as duas pernas esticadas a poucos centímetros do chão.",
+                "Alterne as pernas para cima e para baixo, em movimentos curtos.",
+                "Mantenha a lombar colada no chão."
+            ),
+            mistakes = listOf("Lombar saindo do chão.", "Pernas muito baixas, sem controle.")
+        ),
+        Exercise(
+            id = "remada-supinada", name = "Remada invertida pegada supinada", anim = "row",
+            muscles = listOf(Muscle.BICEPS, Muscle.COSTAS),
+            level = Level.MEDIO, phaseA = "Braços esticados", phaseB = "Peito na mesa", cycleMs = 1500,
+            equipment = "Mesa bem firme e pesada",
+            steps = listOf(
+                "Deite sob a mesa e segure a borda com as palmas das mãos viradas para você.",
+                "Com o corpo reto, puxe o peito em direção à borda, levando os cotovelos junto ao corpo.",
+                "Sinta o bíceps trabalhar no alto e segure 1 segundo.",
+                "Desça devagar. Teste antes se a mesa aguenta seu peso."
+            ),
+            mistakes = listOf("Quadril caindo.", "Abrir os cotovelos para os lados.")
         )
     )
 
@@ -325,7 +412,7 @@ object Catalog {
             focus = listOf(Muscle.QUADRICEPS, Muscle.PEITO, Muscle.LOMBAR, Muscle.ABDOMEN),
             items = listOf(
                 PlanItem("agachamento", sets = 3, rest = 45, reps = 15),
-                PlanItem("flexao-joelhos", sets = 3, rest = 45, reps = 10),
+                PlanItem("flexao", sets = 3, rest = 45, reps = 10),
                 PlanItem("afundo", sets = 3, rest = 45, reps = 10),
                 PlanItem("superman", sets = 3, rest = 30, reps = 12),
                 PlanItem("polichinelo", sets = 3, rest = 30, seconds = 30),
@@ -334,7 +421,7 @@ object Catalog {
         ),
         Plan(
             id = "peito-triceps", name = "Peito e tríceps", tagline = "Parte superior do corpo",
-            level = Level.INTERMEDIARIO, icon = PlanIcon.DUMBBELL,
+            level = Level.MEDIO, icon = PlanIcon.DUMBBELL,
             focus = listOf(Muscle.PEITO, Muscle.TRICEPS, Muscle.OMBROS),
             items = listOf(
                 PlanItem("flexao", sets = 4, rest = 60, reps = 12),
@@ -346,7 +433,7 @@ object Catalog {
         ),
         Plan(
             id = "costas-postura", name = "Costas e postura", tagline = "Costas, lombar e postura",
-            level = Level.INTERMEDIARIO, icon = PlanIcon.SHIELD,
+            level = Level.MEDIO, icon = PlanIcon.SHIELD,
             focus = listOf(Muscle.COSTAS, Muscle.LOMBAR, Muscle.BICEPS, Muscle.GLUTEOS),
             items = listOf(
                 PlanItem("superman", sets = 4, rest = 45, reps = 12),
@@ -358,7 +445,7 @@ object Catalog {
         ),
         Plan(
             id = "pernas-gluteos", name = "Pernas e glúteos", tagline = "Parte inferior do corpo",
-            level = Level.INTERMEDIARIO, icon = PlanIcon.PEAK,
+            level = Level.MEDIO, icon = PlanIcon.PEAK,
             focus = listOf(Muscle.QUADRICEPS, Muscle.GLUTEOS, Muscle.POSTERIOR, Muscle.PANTURRILHA),
             items = listOf(
                 PlanItem("agachamento", sets = 4, rest = 60, reps = 15),
@@ -371,7 +458,7 @@ object Catalog {
         ),
         Plan(
             id = "ombros-abdomen", name = "Ombros e abdômen", tagline = "Ombros e core",
-            level = Level.INTERMEDIARIO, icon = PlanIcon.TARGET,
+            level = Level.MEDIO, icon = PlanIcon.TARGET,
             focus = listOf(Muscle.OMBROS, Muscle.ABDOMEN, Muscle.LOMBAR),
             items = listOf(
                 PlanItem("pike", sets = 4, rest = 60, reps = 8),
@@ -384,7 +471,7 @@ object Catalog {
         ),
         Plan(
             id = "hiit-cardio", name = "HIIT cardio", tagline = "Intervalado, alta intensidade",
-            level = Level.INTERMEDIARIO, icon = PlanIcon.BOLT,
+            level = Level.MEDIO, icon = PlanIcon.BOLT,
             focus = listOf(Muscle.CARDIO, Muscle.QUADRICEPS, Muscle.ABDOMEN),
             items = listOf(
                 PlanItem("polichinelo", sets = 4, rest = 20, seconds = 40),
@@ -392,6 +479,91 @@ object Catalog {
                 PlanItem("escalador", sets = 4, rest = 20, seconds = 30),
                 PlanItem("agachamento", sets = 4, rest = 20, reps = 20),
                 PlanItem("flexao", sets = 3, rest = 30, reps = 12)
+            )
+        ),
+        Plan(
+            id = "bracos", name = "Braços", tagline = "Bíceps, tríceps e ombros",
+            level = Level.MEDIO, icon = PlanIcon.DUMBBELL,
+            focus = listOf(Muscle.BICEPS, Muscle.TRICEPS, Muscle.OMBROS),
+            items = listOf(
+                PlanItem("remada-supinada", sets = 4, rest = 60, reps = 10),
+                PlanItem("flexao-diamante", sets = 4, rest = 60, reps = 10),
+                PlanItem("mergulho", sets = 4, rest = 60, reps = 10),
+                PlanItem("superman-y", sets = 3, rest = 45, reps = 12),
+                PlanItem("prancha", sets = 3, rest = 30, seconds = 40)
+            )
+        ),
+        Plan(
+            id = "ombros-fortes", name = "Ombros fortes", tagline = "Ombros largos e estáveis",
+            level = Level.MEDIO, icon = PlanIcon.SHIELD,
+            focus = listOf(Muscle.OMBROS, Muscle.TRICEPS, Muscle.COSTAS),
+            items = listOf(
+                PlanItem("pike", sets = 4, rest = 60, reps = 8),
+                PlanItem("flexao-larga", sets = 3, rest = 60, reps = 10),
+                PlanItem("toque-ombro", sets = 3, rest = 45, reps = 20),
+                PlanItem("superman-y", sets = 3, rest = 45, reps = 12),
+                PlanItem("prancha", sets = 3, rest = 30, seconds = 40)
+            )
+        ),
+        Plan(
+            id = "core-barriga", name = "Core definido", tagline = "Abdômen e cintura, com cardio",
+            level = Level.MEDIO, icon = PlanIcon.TARGET,
+            focus = listOf(Muscle.ABDOMEN, Muscle.LOMBAR, Muscle.CARDIO),
+            items = listOf(
+                PlanItem("bicicleta", sets = 3, rest = 30, reps = 20),
+                PlanItem("escalador", sets = 3, rest = 30, seconds = 30),
+                PlanItem("elevacao-pernas", sets = 3, rest = 40, reps = 12),
+                PlanItem("prancha", sets = 3, rest = 30, seconds = 40),
+                PlanItem("prancha-lateral", sets = 3, rest = 30, seconds = 30)
+            )
+        ),
+        Plan(
+            id = "combo-queima", name = "Combo queima total", tagline = "HIIT e core em um treino só",
+            level = Level.MEDIO, icon = PlanIcon.FLAME, combo = true,
+            focus = listOf(Muscle.CARDIO, Muscle.ABDOMEN, Muscle.QUADRICEPS),
+            items = listOf(
+                PlanItem("polichinelo", sets = 3, rest = 20, seconds = 40),
+                PlanItem("joelho-alto", sets = 3, rest = 20, seconds = 30),
+                PlanItem("agachamento", sets = 3, rest = 20, reps = 20),
+                PlanItem("escalador", sets = 3, rest = 20, seconds = 30),
+                PlanItem("bicicleta", sets = 3, rest = 20, reps = 20),
+                PlanItem("prancha", sets = 3, rest = 20, seconds = 40)
+            )
+        ),
+        Plan(
+            id = "combo-bracos-ombros", name = "Combo braços e ombros", tagline = "Parte superior com foco em braços",
+            level = Level.MEDIO, icon = PlanIcon.DUMBBELL, combo = true,
+            focus = listOf(Muscle.BICEPS, Muscle.TRICEPS, Muscle.OMBROS),
+            items = listOf(
+                PlanItem("flexao-diamante", sets = 3, rest = 45, reps = 10),
+                PlanItem("mergulho", sets = 3, rest = 45, reps = 10),
+                PlanItem("pike", sets = 3, rest = 45, reps = 8),
+                PlanItem("remada-supinada", sets = 3, rest = 45, reps = 10),
+                PlanItem("superman-y", sets = 3, rest = 30, reps = 12)
+            )
+        ),
+        Plan(
+            id = "combo-pernas", name = "Combo pernas explosivas", tagline = "Pernas e glúteos em um treino só",
+            level = Level.MEDIO, icon = PlanIcon.PEAK, combo = true,
+            focus = listOf(Muscle.QUADRICEPS, Muscle.GLUTEOS, Muscle.PANTURRILHA),
+            items = listOf(
+                PlanItem("agachamento", sets = 3, rest = 30, reps = 20),
+                PlanItem("afundo", sets = 3, rest = 30, reps = 12),
+                PlanItem("ponte", sets = 3, rest = 30, reps = 15),
+                PlanItem("panturrilha", sets = 3, rest = 30, reps = 20),
+                PlanItem("parede", sets = 3, rest = 30, seconds = 40)
+            )
+        ),
+        Plan(
+            id = "combo-superior", name = "Combo parte superior", tagline = "Peito, costas e ombros juntos",
+            level = Level.MEDIO, icon = PlanIcon.SHIELD, combo = true,
+            focus = listOf(Muscle.PEITO, Muscle.COSTAS, Muscle.OMBROS),
+            items = listOf(
+                PlanItem("flexao", sets = 3, rest = 45, reps = 12),
+                PlanItem("remada", sets = 3, rest = 45, reps = 10),
+                PlanItem("pike", sets = 3, rest = 45, reps = 8),
+                PlanItem("mergulho", sets = 3, rest = 45, reps = 10),
+                PlanItem("prancha", sets = 3, rest = 30, seconds = 40)
             )
         )
     )

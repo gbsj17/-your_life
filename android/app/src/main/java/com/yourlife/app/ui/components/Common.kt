@@ -227,3 +227,40 @@ fun ClickableRow(onClick: () -> Unit, modifier: Modifier = Modifier, content: @C
 fun BackButton(onClick: () -> Unit) {
     RoundIconButton(AppIcons.Back, "Voltar", onClick)
 }
+
+/** Seletor de nível (Iniciante / Médio / Avançado). */
+@Composable
+fun LevelChips(selected: com.yourlife.app.data.Level, onSelect: (com.yourlife.app.data.Level) -> Unit, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        com.yourlife.app.data.Level.entries.forEach { lv ->
+            val on = lv == selected
+            Surface(
+                onClick = { onSelect(lv) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp),
+                color = if (on) scheme.primary else scheme.surface,
+                border = BorderStroke(1.dp, if (on) scheme.primary else scheme.outlineVariant)
+            ) {
+                Box(Modifier.padding(vertical = 11.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        lv.label,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (on) scheme.onPrimary else scheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Barra de progresso simples (0..1). */
+@Composable
+fun BarProgress(fraction: Float, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant)) {
+        Box(
+            Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).height(8.dp)
+                .clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
+        )
+    }
+}

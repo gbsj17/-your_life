@@ -36,6 +36,9 @@ import androidx.compose.ui.unit.dp
 import com.yourlife.app.AppViewModel
 import com.yourlife.app.data.Catalog
 import com.yourlife.app.data.Exercise
+import com.yourlife.app.data.Level
+import com.yourlife.app.data.forLevel
+import com.yourlife.app.ui.components.LevelChips
 import com.yourlife.app.data.exercise
 import com.yourlife.app.ui.components.AppCard
 import com.yourlife.app.ui.components.AppIcon
@@ -47,8 +50,8 @@ import com.yourlife.app.ui.components.SectionTitle
 import com.yourlife.app.ui.icons.AppIcons
 
 @Composable
-fun PlanDetailScreen(vm: AppViewModel, planId: String) {
-    val plan = Catalog.plan(planId)
+fun PlanDetailScreen(vm: AppViewModel, planId: String, level: Level, deload: Boolean) {
+    val plan = Catalog.plan(planId).forLevel(level, deload)
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -70,10 +73,11 @@ fun PlanDetailScreen(vm: AppViewModel, planId: String) {
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    LevelChips(level, { vm.route = com.yourlife.app.Route.PlanDetail(planId, it, deload) })
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         InfoChip("~${plan.estMin} min", icon = AppIcons.Timer, highlight = true)
                         InfoChip("${plan.items.size} exercícios", icon = AppIcons.Dumbbell)
-                        InfoChip(plan.level.label)
+                        if (deload) InfoChip("Semana leve")
                     }
                     Text(
                         "Foco: " + plan.focus.joinToString(", ") { it.label },
