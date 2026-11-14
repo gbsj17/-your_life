@@ -4,6 +4,9 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// No GitHub Actions o número do build vira a versão; localmente fica 1.
+val buildNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
+
 android {
     namespace = "com.yourlife.app"
     compileSdk = 35
@@ -12,13 +15,25 @@ android {
         applicationId = "com.yourlife.app"
         minSdk = 28 // mínimo exigido pelo Health Connect (Android 9)
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = buildNumber
+        versionName = "1.0.$buildNumber"
+    }
+
+    // Chave fixa: todo build sai com a mesma assinatura, então o APK novo atualiza o antigo
+    // sem precisar desinstalar (e as permissões do Health Connect continuam valendo).
+    signingConfigs {
+        create("release") {
+            storeFile = file("../keystore/yourlife.jks")
+            storePassword = "yourlife123"
+            keyAlias = "yourlife"
+            keyPassword = "yourlife123"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -34,11 +49,24 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.animation:animation")
     implementation("androidx.compose.material3:material3")
+
+    // Health Connect (Saúde do Google)
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
 }

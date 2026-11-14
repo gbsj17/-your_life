@@ -8,6 +8,9 @@ on:
       - '.github/workflows/android.yml'
   workflow_dispatch: # permite rodar manualmente pela aba Actions
 
+permissions:
+  contents: write # necessário para publicar a Release com o APK
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,12 +27,25 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Gerar APK de debug
+      - name: Gerar APK assinado (release)
         working-directory: android
-        run: gradle assembleDebug --no-daemon
+        run: gradle assembleRelease --no-daemon
 
-      - name: Enviar APK
+      - name: Nomear o APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk "YourLife-1.0.${{ github.run_number }}.apk"
+
+      - name: Guardar APK como artefato do build
         uses: actions/upload-artifact@v4
         with:
           name: your-life-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: YourLife-1.0.${{ github.run_number }}.apk
+
+      # Cria uma Release com link direto para baixar o APK (na aba Releases do repositório)
+      - name: Publicar Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v1.0.${{ github.run_number }}" "YourLife-1.0.${{ github.run_number }}.apk" \
+            --title "Your Life 1.0.${{ github.run_number }}" \
+            --notes "APK assinado. Baixe o arquivo abaixo no celular e toque para instalar. Versões novas atualizam a anterior." \
+            --latest
