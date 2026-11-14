@@ -4,6 +4,10 @@
     <!-- Health Connect: o app só grava sessões de exercício -->
     <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
 
+    <!-- Atualização dentro do app: consulta e baixa o APK dos Releases do GitHub -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
     </queries>
@@ -48,6 +52,16 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

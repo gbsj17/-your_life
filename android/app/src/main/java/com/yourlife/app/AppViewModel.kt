@@ -20,6 +20,9 @@ import com.yourlife.app.data.Session
 import com.yourlife.app.data.Settings
 import com.yourlife.app.data.Store
 import com.yourlife.app.health.HealthConnectManager
+import com.yourlife.app.update.UpdateInfo
+import com.yourlife.app.update.Updater
+import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -36,6 +39,16 @@ sealed interface Route {
 }
 
 enum class Phase { WORK, RUN, REST, DONE }
+
+sealed interface UpdateState {
+    data object Idle : UpdateState
+    data object Checking : UpdateState
+    data object UpToDate : UpdateState
+    data class Available(val info: UpdateInfo) : UpdateState
+    data class Downloading(val info: UpdateInfo, val progress: Float) : UpdateState
+    data class Ready(val info: UpdateInfo, val file: File) : UpdateState
+    data class Failed(val message: String) : UpdateState
+}
 
 /** Estado do treino em andamento. */
 class WorkoutState(val plan: Plan, val startedAt: Long) {
@@ -82,6 +95,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         refreshHealth()
+        checkUpdate()
         viewModelScope.launch {
             while (isActive) {
                 delay(100)
@@ -97,6 +111,39 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             is Route.ProgramDetail -> { route = Route.Plans; true }
             is Route.PlanDetail, Route.Plans, Route.Progress, Route.Settings -> { route = Route.Home; true }
             is Route.Workout -> false // a tela do treino cuida do próprio "voltar"
+        }
+    }
+
+    // ---------- atualização do app ----------
+    var update by mutableStateOf<UpdateState>(UpdateState.Idle)
+        private set
+
+    fun checkUpdate() {
+        if (update is UpdateState.Checking || update is UpdateState.Downloading) return
+        update = UpdateState.Checking
+        viewModelScope.launch {
+            update = try {
+                val info = Updater.fetchLatest()
+                if (info.versionCode > Updater.installedCode(getApplication())) UpdateState.Available(info)
+                else UpdateState.UpToDate
+            } catch (e: Exception) {
+                UpdateState.Failed("Não foi possível verificar. Confira a internet.")
+            }
+        }
+    }
+
+    fun downloadUpdate() {
+        val info = (update as? UpdateState.Available)?.info ?: return
+        update = UpdateState.Downloading(info, 0f)
+        viewModelScope.launch {
+            update = try {
+                val file = Updater.download(getApplication(), info) { p ->
+                    update = UpdateState.Downloading(info, p)
+                }
+                UpdateState.Ready(info, file)
+            } catch (e: Exception) {
+                UpdateState.Failed("Falha no download. Tente de novo.")
+            }
         }
     }
 

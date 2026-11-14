@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import com.yourlife.app.AppViewModel
+import com.yourlife.app.UpdateState
+import com.yourlife.app.update.Updater
+import com.yourlife.app.ui.components.BarProgress
 import com.yourlife.app.ui.components.AppCard
 import com.yourlife.app.ui.components.AppIcon
 import com.yourlife.app.ui.components.IconBubble
@@ -158,6 +161,9 @@ fun SettingsScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
                 }
             }
         }
+
+        item { SectionTitle("Atualização", Modifier.padding(top = 8.dp)) }
+        item { UpdateCard(vm) }
     }
 }
 
@@ -220,6 +226,58 @@ private fun openStore(context: Context) {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         } catch (_: Exception) {
+        }
+    }
+}
+
+@Composable
+private fun UpdateCard(vm: AppViewModel) {
+    val context = LocalContext.current
+    val scheme = MaterialTheme.colorScheme
+    AppCard {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            when (val u = vm.update) {
+                UpdateState.Idle, UpdateState.UpToDate -> {
+                    Text(
+                        if (u == UpdateState.UpToDate) "Você está na versão mais recente." else "Procure por novas versões do app.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    SecondaryButton("Verificar agora", { vm.checkUpdate() }, Modifier.fillMaxWidth())
+                }
+                UpdateState.Checking -> Text("Verificando…", style = MaterialTheme.typography.bodyMedium)
+                is UpdateState.Available -> {
+                    Text("Nova versão disponível: ${u.info.versionName}", style = MaterialTheme.typography.titleMedium)
+                    if (u.info.sizeBytes > 0) {
+                        Text(
+                            "Tamanho: %.1f MB".format(u.info.sizeBytes / 1048576f),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = scheme.onSurfaceVariant
+                        )
+                    }
+                    PrimaryButton("Baixar atualização", { vm.downloadUpdate() })
+                }
+                is UpdateState.Downloading -> {
+                    Text("Baixando ${(u.progress * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium)
+                    BarProgress(u.progress)
+                }
+                is UpdateState.Ready -> {
+                    Text("Download concluído (${u.info.versionName}).", style = MaterialTheme.typography.titleMedium)
+                    if (!Updater.canInstall(context)) {
+                        Text(
+                            "Para instalar, o Android pede que você permita este app a instalar atualizações. Autorize e volte aqui.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = scheme.onSurfaceVariant
+                        )
+                        PrimaryButton("Autorizar instalação", { Updater.openInstallPermission(context) })
+                    } else {
+                        PrimaryButton("Instalar agora", { Updater.install(context, u.file) })
+                    }
+                }
+                is UpdateState.Failed -> {
+                    Text(u.message, style = MaterialTheme.typography.bodyMedium, color = scheme.error)
+                    SecondaryButton("Tentar de novo", { vm.checkUpdate() }, Modifier.fillMaxWidth())
+                }
+            }
         }
     }
 }
