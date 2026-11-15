@@ -144,6 +144,7 @@ private fun MyPlanCard(vm: AppViewModel, st: ProgramStatus) {
                     }
                 }
             }
+            SecondaryButton("Ver plano do mês", { vm.route = Route.Month }, Modifier.fillMaxWidth(), AppIcons.Calendar)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SecondaryButton("Ver programa", { vm.route = Route.ProgramDetail(st.program.id) }, Modifier.weight(1f))
                 SecondaryButton("Encerrar", { vm.endProgram() }, Modifier.weight(1f))

@@ -28,6 +28,7 @@ import com.yourlife.app.ui.icons.AppIcons
 import com.yourlife.app.ui.screens.ExerciseSheet
 import com.yourlife.app.ui.screens.HomeScreen
 import com.yourlife.app.ui.screens.PlanDetailScreen
+import com.yourlife.app.ui.screens.MonthScreen
 import com.yourlife.app.ui.screens.PlansScreen
 import com.yourlife.app.ui.screens.ProgramDetailScreen
 import com.yourlife.app.ui.screens.ProgressScreen
@@ -79,6 +80,7 @@ fun YourLifeApp(vm: AppViewModel) {
                     Route.Settings -> SettingsScreen(vm, padding)
                     is Route.PlanDetail -> PlanDetailScreen(vm, r.planId, r.level, r.deload)
                     is Route.ProgramDetail -> ProgramDetailScreen(vm, r.programId)
+                    Route.Month -> MonthScreen(vm)
                     is Route.Workout -> WorkoutScreen(vm)
                 }
             }
@@ -128,5 +130,6 @@ private fun routeOrder(r: Route): Int = when (r) {
     Route.Settings -> 3
     is Route.PlanDetail -> 10
     is Route.ProgramDetail -> 11
+    Route.Month -> 12
     is Route.Workout -> 20
 }

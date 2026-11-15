@@ -244,6 +244,7 @@ private fun PlanProgressCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurfaceVariant
             )
+            SecondaryButton("Ver plano do mês", { vm.route = Route.Month }, Modifier.fillMaxWidth(), AppIcons.Calendar)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ModeChip("Seguir plano", followPlan, Modifier.weight(1f)) { onMode(true) }
                 ModeChip("Treino do dia", !followPlan, Modifier.weight(1f)) { onMode(false) }

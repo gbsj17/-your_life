@@ -14,6 +14,7 @@ import com.yourlife.app.data.Exercise
 import com.yourlife.app.data.Level
 import com.yourlife.app.data.ProgramStatus
 import com.yourlife.app.data.Programs
+import com.yourlife.app.data.Swaps
 import com.yourlife.app.data.Plan
 import com.yourlife.app.data.PlanItem
 import com.yourlife.app.data.Session
@@ -35,6 +36,7 @@ sealed interface Route {
     data object Settings : Route
     data class PlanDetail(val planId: String, val level: Level = Level.MEDIO, val deload: Boolean = false) : Route
     data class ProgramDetail(val programId: String) : Route
+    data object Month : Route
     data class Workout(val planId: String) : Route
 }
 
@@ -97,6 +99,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
 
     init {
+        Swaps.map = store.swaps()
         refreshHealth()
         checkUpdate()
         viewModelScope.launch {
@@ -111,7 +114,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun goBack(): Boolean {
         return when (route) {
             Route.Home -> false
-            is Route.ProgramDetail -> { route = Route.Plans; true }
+            is Route.ProgramDetail, Route.Month -> { route = Route.Plans; true }
             is Route.PlanDetail, Route.Plans, Route.Progress, Route.Settings -> { route = Route.Home; true }
             is Route.Workout -> false // a tela do treino cuida do próprio "voltar"
         }
@@ -169,6 +172,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 UpdateState.Failed("Falha no download. Tente de novo.")
             }
         }
+    }
+
+    // ---------- trocas de exercício ----------
+    /** Troca `original` por `replacement` em todos os treinos; null restaura o original. */
+    fun setSwap(original: String, replacement: String?) {
+        val m = Swaps.map.toMutableMap()
+        if (replacement == null || replacement == original) m.remove(original) else m[original] = replacement
+        Swaps.map = m
+        store.saveSwaps(m)
     }
 
     // ---------- programas ----------

@@ -24,7 +24,7 @@ private val HARDER = mapOf(
  * Avançado: variação mais difícil, +1 série, +25% reps/tempo, -20% descanso.
  * Semana leve (deload): -1 série em cada exercício, para recuperar.
  */
-fun Plan.forLevel(target: Level, deloadWeek: Boolean = false): Plan {
+fun Plan.forLevel(target: Level, deloadWeek: Boolean = false, swaps: Boolean = true): Plan {
     val scaled = items.map { it0 ->
         when (target) {
             Level.MEDIO -> it0
@@ -43,6 +43,8 @@ fun Plan.forLevel(target: Level, deloadWeek: Boolean = false): Plan {
                 seconds = it0.seconds?.let { s -> Math.round(s * 1.25f / 5f) * 5 }
             )
         }
+    }.map {
+        if (!swaps) it else PlanItem(Swaps.resolve(it.exerciseId), it.sets, it.rest, it.reps, it.seconds)
     }.map { if (deloadWeek) PlanItem(it.exerciseId, (it.sets - 1).coerceAtLeast(1), it.rest, it.reps, it.seconds) else it }
     return Plan(id, name, tagline, target, icon, focus, scaled, combo, deloadWeek)
 }
@@ -171,6 +173,38 @@ object Programs {
             }
         }
         return count
+    }
+
+    /** Estado do programa em uma data qualquer; null se a data está fora do período do plano. */
+    fun dayInfo(e: Enrollment, date: LocalDate): ProgramStatus? {
+        val idx = date.toEpochDay() - e.startDay
+        if (idx < 0 || idx >= e.phaseDays.sum()) return null
+        return status(e, date)
+    }
+
+    /** Dias em que cada nível começa (só níveis com pelo menos 1 dia): data de início e nível. */
+    fun phaseStarts(e: Enrollment): List<Pair<LocalDate, Level>> {
+        val program = get(e.programId) ?: return emptyList()
+        var day = 0L
+        val out = ArrayList<Pair<LocalDate, Level>>()
+        for ((i, d) in e.phaseDays.withIndex()) {
+            if (d > 0) out.add(LocalDate.ofEpochDay(e.startDay + day) to program.phases[i].level)
+            day += d
+        }
+        return out
+    }
+
+    /** Exemplos de exercícios que mudam ao passar de um nível para outro (nome antes -> nome depois). */
+    fun exerciseChanges(program: Program, from: Level, to: Level, max: Int = 3): List<Pair<String, String>> {
+        val out = LinkedHashSet<Pair<String, String>>()
+        for (id in program.phases[to.ordinal].week.filterNotNull().distinct()) {
+            val a = Catalog.plan(id).forLevel(from, swaps = false).items
+            val b = Catalog.plan(id).forLevel(to, swaps = false).items
+            a.zip(b).forEach { (x, y) ->
+                if (x.exerciseId != y.exerciseId) out.add(Catalog.exercise(x.exerciseId).name to Catalog.exercise(y.exerciseId).name)
+            }
+        }
+        return out.take(max)
     }
 
     /** Estado do programa na data `today`. */

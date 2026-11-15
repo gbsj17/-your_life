@@ -10,6 +10,7 @@ class Store(context: Context) {
     private val historyKey = "history.v1"
     private val settingsKey = "settings.v1"
     private val enrollKey = "enrollment.v1"
+    private val swapsKey = "swaps.v1"
 
     fun history(): List<Session> {
         val raw = prefs.getString(historyKey, null) ?: return emptyList()
@@ -108,5 +109,21 @@ class Store(context: Context) {
                 .put("levelOffset", e.levelOffset)
                 .toString()
         ).apply()
+    }
+
+    fun swaps(): Map<String, String> {
+        val raw = prefs.getString(swapsKey, null) ?: return emptyMap()
+        return try {
+            val o = JSONObject(raw)
+            o.keys().asSequence().associateWith { o.getString(it) }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+    fun saveSwaps(m: Map<String, String>) {
+        val o = JSONObject()
+        m.forEach { (k, v) -> o.put(k, v) }
+        prefs.edit().putString(swapsKey, o.toString()).apply()
     }
 }
