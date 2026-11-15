@@ -18,13 +18,14 @@ val ANIM_GEOMETRY: Map<String, AnimGeometry> = mapOf(
         props = listOf(Prop(0, 8f, 0f, 23f, 20f))
     ),
     "jack" to AnimGeometry(
-        a = floatArrayOf(50f, 30.4f, 90f, 0f, 46.39f, 29.69f, 1f, 53.61f, 29.69f, -1f, 47f, 1.2f, 1f, 53f, 1.2f, -1f, 0f, 0f),
-        b = floatArrayOf(50f, 29f, 90f, 0f, 34.5f, 67.72f, 1f, 65.5f, 67.72f, -1f, 33f, 1.2f, 1f, 67f, 1.2f, -1f, 0f, 0f),
-        props = listOf()
+        a = floatArrayOf(50f, 30.4f, 90f, 0f, 40.5f, 29.5f, -1f, 59.5f, 29.5f, 1f, 47.6f, 1.2f, -1f, 52.4f, 1.2f, 1f, 0f, 0f),
+        b = floatArrayOf(50f, 29.2f, 90f, 0f, 30.5f, 72f, -1f, 69.5f, 72f, 1f, 35f, 1.2f, -1f, 65f, 1.2f, 1f, 0f, 0f),
+        props = listOf(),
+        front = true
     ),
     "highknee" to AnimGeometry(
-        a = floatArrayOf(45f, 30.6f, 90f, 0f, 27.28f, 40.86f, -1f, 61.38f, 57.05f, -1f, 49f, 14f, 1f, 43f, 1.2f, 1f, -30f, 0f),
-        b = floatArrayOf(45f, 30.6f, 90f, 0f, 61.38f, 57.05f, -1f, 27.28f, 40.86f, -1f, 43f, 1.2f, 1f, 49f, 14f, 1f, 0f, -30f),
+        a = floatArrayOf(45f, 30.6f, 90f, 0f, 27.28f, 40.86f, -1f, 61.38f, 57.05f, -1f, 59f, 17f, 1f, 43f, 1.2f, 1f, -12f, 0f),
+        b = floatArrayOf(45f, 30.6f, 90f, 0f, 61.38f, 57.05f, -1f, 27.28f, 40.86f, -1f, 43f, 1.2f, 1f, 59f, 17f, 1f, 0f, -12f),
         props = listOf()
     ),
     "pushup" to AnimGeometry(

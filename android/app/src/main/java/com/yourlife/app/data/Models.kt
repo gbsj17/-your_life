@@ -4,7 +4,8 @@ package com.yourlife.app.data
 class Prop(val kind: Int, val x0: Float, val y0: Float, val x1: Float, val y1: Float)
 
 /** Poses A e B (18 números cada) geradas por tools/gen_poses.py. */
-class AnimGeometry(val a: FloatArray, val b: FloatArray, val props: List<Prop>)
+/** `front` = desenhada de frente (dois ombros e dois quadris); caso contrário, de perfil. */
+class AnimGeometry(val a: FloatArray, val b: FloatArray, val props: List<Prop>, val front: Boolean = false)
 
 enum class Muscle(val label: String) {
     PEITO("Peito"),

@@ -88,10 +88,13 @@ def skeleton(p):
 # ---------------------------------------------------------------- exercícios
 # props: ('rect', x0, y0, x1, y1) | ('line', x0, y0, x1, y1)
 EX = {}
+FRONT = set()   # animações desenhadas de frente (o resto é de perfil)
 
 
-def ex(key, a, b, props=()):
+def ex(key, a, b, props=(), front=False):
     EX[key] = (a, b, list(props))
+    if front:
+        FRONT.add(key)
 
 
 def stand(hx=45, hy=30.4, torso=90.0, an=('fk', -92, -90), af=('fk', -88, -90), nx=45, fx=48, **kw):
@@ -119,19 +122,21 @@ ex('bulgarian',
      ln=('ik', 52, ANK, 1), lf=('ik', 17, 21.5, 1), ff=180),
    [('rect', 8, 0, 23, 20)])
 
-# polichinelo (vista frontal)
+# polichinelo (vista de frente). No desenho de frente os braços saem de dois ombros e as pernas de dois
+# quadris; "near" é o lado esquerdo da tela. Dobras para fora: braço esquerdo -1, direito +1 (idem pernas).
 ex('jack',
-   P(hip=(50, 30.4), torso=90, an=('fk', -100, -98), af=('fk', -80, -82),
-     ln=('ik', 47, ANK, 1), lf=('ik', 53, ANK, -1)),
-   P(hip=(50, 29), torso=90, an=('fk', 140, 125), af=('fk', 40, 55),
-     ln=('ik', 33, ANK, 1), lf=('ik', 67, ANK, -1)))
+   P(hip=(50, 30.4), torso=90, an=('ik', 40.5, 29.5, -1), af=('ik', 59.5, 29.5, 1),
+     ln=('ik', 47.6, ANK, -1), lf=('ik', 52.4, ANK, 1)),
+   P(hip=(50, 29.2), torso=90, an=('ik', 30.5, 72, -1), af=('ik', 69.5, 72, 1),
+     ln=('ik', 35, ANK, -1), lf=('ik', 65, ANK, 1)),
+   front=True)
 
 # elevação de joelhos
 ex('highknee',
    P(hip=(45, 30.6), torso=90, an=('fk', -125, -170), af=('fk', -25, 60),
-     ln=('ik', 49, 14, 1), lf=('ik', 43, ANK, 1), fn=-30),
+     ln=('ik', 59, 17, 1), lf=('ik', 43, ANK, 1), fn=-12),
    P(hip=(45, 30.6), torso=90, an=('fk', -25, 60), af=('fk', -125, -170),
-     ln=('ik', 43, ANK, 1), lf=('ik', 49, 14, 1), ff=-30))
+     ln=('ik', 43, ANK, 1), lf=('ik', 59, 17, 1), ff=-12))
 
 
 # flexão de braços e variantes (corpo reto apoiado nos pés)
@@ -390,7 +395,9 @@ def to_kotlin(path):
         lines.append('    "%s" to AnimGeometry(' % key)
         lines.append('        a = floatArrayOf(%s),' % pa)
         lines.append('        b = floatArrayOf(%s),' % pb)
-        lines.append('        props = listOf(%s)' % pr)
+        lines.append('        props = listOf(%s)%s' % (pr, ',' if key in FRONT else ''))
+        if key in FRONT:
+            lines.append('        front = true')
         lines.append('    ),')
     lines.append(')')
     with open(path, 'w', encoding='utf-8') as f:
