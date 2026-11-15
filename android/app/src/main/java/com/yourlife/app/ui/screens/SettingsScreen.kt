@@ -27,7 +27,6 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import com.yourlife.app.AppViewModel
 import com.yourlife.app.UpdateState
-import com.yourlife.app.update.Updater
 import com.yourlife.app.ui.components.BarProgress
 import com.yourlife.app.ui.components.AppCard
 import com.yourlife.app.ui.components.AppIcon
@@ -232,7 +231,6 @@ private fun openStore(context: Context) {
 
 @Composable
 private fun UpdateCard(vm: AppViewModel) {
-    val context = LocalContext.current
     val scheme = MaterialTheme.colorScheme
     AppCard {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -262,15 +260,15 @@ private fun UpdateCard(vm: AppViewModel) {
                 }
                 is UpdateState.Ready -> {
                     Text("Download concluído (${u.info.versionName}).", style = MaterialTheme.typography.titleMedium)
-                    if (!Updater.canInstall(context)) {
+                    if (!vm.installAllowed) {
                         Text(
                             "Para instalar, o Android pede que você permita este app a instalar atualizações. Autorize e volte aqui.",
                             style = MaterialTheme.typography.bodySmall,
                             color = scheme.onSurfaceVariant
                         )
-                        PrimaryButton("Autorizar instalação", { Updater.openInstallPermission(context) })
+                        PrimaryButton("Autorizar instalação", { vm.requestInstallPermission() })
                     } else {
-                        PrimaryButton("Instalar agora", { Updater.install(context, u.file) })
+                        PrimaryButton("Instalar agora", { vm.installUpdate() })
                     }
                 }
                 is UpdateState.Failed -> {

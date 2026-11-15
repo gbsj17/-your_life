@@ -118,6 +118,30 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---------- atualização do app ----------
+    /** Se o Android já permite este app instalar atualizações; reavaliado toda vez que o app volta ao primeiro plano. */
+    var installAllowed by mutableStateOf(Updater.canInstall(app))
+        private set
+    private var installRequested = false
+
+    fun requestInstallPermission() {
+        installRequested = true
+        Updater.openInstallPermission(getApplication())
+    }
+
+    fun installUpdate() {
+        val ready = update as? UpdateState.Ready ?: return
+        if (Updater.canInstall(getApplication())) {
+            installRequested = false
+            Updater.install(getApplication(), ready.file)
+        } else requestInstallPermission()
+    }
+
+    /** Chamado ao voltar para o app: se a permissão acabou de ser dada, segue direto para a instalação. */
+    fun onResumed() {
+        installAllowed = Updater.canInstall(getApplication())
+        if (installAllowed && installRequested && update is UpdateState.Ready) installUpdate()
+    }
+
     fun checkUpdate() {
         if (update is UpdateState.Checking || update is UpdateState.Downloading) return
         update = UpdateState.Checking

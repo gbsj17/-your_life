@@ -35,7 +35,7 @@ import com.yourlife.app.ui.screens.WorkoutScreen
 @Composable
 fun YourLifeApp(vm: AppViewModel) {
     // ao voltar de outro app (ex.: tela de permissões), confere o estado do Health Connect
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshHealth() }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshHealth(); vm.onResumed() }
 
     val route = vm.route
     BackHandler(enabled = route != Route.Home && route !is Route.Workout) { vm.goBack() }
