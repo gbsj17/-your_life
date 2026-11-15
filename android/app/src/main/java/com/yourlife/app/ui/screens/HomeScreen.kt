@@ -223,7 +223,8 @@ private fun PlanProgressCard(
 ) {
     val scheme = MaterialTheme.colorScheme
     val planned = Programs.plannedTotal(e)
-    val done = vm.history.count { java.time.LocalDate.parse(it.date).toEpochDay() >= e.startDay }
+    val ids = Programs.planIds(st.program)
+    val done = vm.history.count { it.planId in ids && java.time.LocalDate.parse(it.date).toEpochDay() >= e.startDay }
     val remaining = (planned - done).coerceAtLeast(0)
     AppCard(Modifier.staggerIn(1)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

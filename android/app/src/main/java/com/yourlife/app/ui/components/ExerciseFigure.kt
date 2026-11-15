@@ -358,13 +358,22 @@ private fun DrawScope.drawFigure(
     capsule(shO, neckO, 2.0f * s, 1.9f * s, pal.skin, volume = false)
     val headO = pt(headX, headY)
     drawCircle(pal.skin, HEAD_R * s, headO)
-    // cabelo cobrindo o topo da cabeça
+    // cabelo: cobre o topo e a nuca. A frente do rosto fica 90° à direita da direção do pescoço
+    // (em pé olha para a direita; deitado de costas olha para cima; de bruços olha para baixo).
     drawArc(
-        pal.hair, startAngle = -hAng - 105f, sweepAngle = 210f, useCenter = true,
+        pal.hair, startAngle = -(hAng + 50f) - 100f, sweepAngle = 200f, useCenter = true,
         topLeft = Offset(headO.x - HEAD_R * s, headO.y - HEAD_R * s),
         size = Size(HEAD_R * 2f * s, HEAD_R * 2f * s)
     )
-    drawCircle(Color.White.copy(alpha = 0.16f), HEAD_R * 0.38f * s, Offset(headO.x + LIGHT.x * 2.6f * s, headO.y + LIGHT.y * 2.6f * s))
+    val faceAng = hAng - 90f
+    fun onHead(front: Float, up: Float, r: Float): Offset {
+        val dx = cos(rad(faceAng)) * front + cos(rad(hAng)) * up
+        val dy = sin(rad(faceAng)) * front + sin(rad(hAng)) * up
+        return Offset(headO.x + dx * r * s, headO.y - dy * r * s)
+    }
+    drawCircle(Color(0xFFD39A7C), 0.95f * s, onHead(1.0f, -0.05f, HEAD_R))           // nariz
+    drawCircle(Color(0xFF2B2320), 0.8f * s, onHead(0.55f, 0.14f, HEAD_R))            // olho
+    drawCircle(Color.White.copy(alpha = 0.16f), HEAD_R * 0.3f * s, Offset(headO.x + LIGHT.x * 2.8f * s, headO.y + LIGHT.y * 2.8f * s))
 
     // lado da frente
     leg(legN, p[16], false)

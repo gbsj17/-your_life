@@ -9,12 +9,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.health.connect.client.HealthConnectClient
+import com.yourlife.app.data.Catalog
 import com.yourlife.app.data.Enrollment
+import com.yourlife.app.data.forLevel
 import com.yourlife.app.data.Exercise
 import com.yourlife.app.data.Level
 import com.yourlife.app.data.ProgramStatus
 import com.yourlife.app.data.Programs
 import com.yourlife.app.data.Swaps
+import com.yourlife.app.data.exercise
+import com.yourlife.app.data.perSide
+import com.yourlife.app.reminder.Reminder
+import org.json.JSONObject
 import com.yourlife.app.data.Plan
 import com.yourlife.app.data.PlanItem
 import com.yourlife.app.data.Session
@@ -56,6 +62,7 @@ sealed interface UpdateState {
 class WorkoutState(val plan: Plan, val startedAt: Long) {
     var index by mutableIntStateOf(0)
     var setNo by mutableIntStateOf(1)
+    var side by mutableIntStateOf(1)   // 1 ou 2, só para exercícios feitos de um lado por vez
     var phase by mutableStateOf(Phase.WORK)
     var paused by mutableStateOf(false)
     var endAt by mutableLongStateOf(0L)
@@ -100,6 +107,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         Swaps.map = store.swaps()
+        restoreWorkout()
+        Reminder.schedule(app)
         refreshHealth()
         checkUpdate()
         viewModelScope.launch {
@@ -169,7 +178,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 UpdateState.Ready(info, file)
             } catch (e: Exception) {
-                UpdateState.Failed("Falha no download. Tente de novo.")
+                UpdateState.Failed(
+                    if (e.message == "integridade") "O arquivo baixado não confere com o publicado. Não instale; tente de novo."
+                    else "Falha no download. Tente de novo."
+                )
             }
         }
     }
@@ -207,11 +219,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         store.saveEnrollment(enrollment)
     }
 
-    /** Ajuste manual de dificuldade: -1 mais fácil, +1 mais difícil (em relação ao nível da fase). */
-    fun shiftLevel(delta: Int) {
-        val e = enrollment ?: return
-        enrollment = e.copy(levelOffset = (e.levelOffset + delta).coerceIn(-2, 2))
+    /**
+     * Ajuste manual de dificuldade: -1 mais fácil, +1 mais difícil (em relação ao nível da fase).
+     * Retorna false (sem mudar nada) se já está no nível mais fácil ou no mais difícil.
+     */
+    fun shiftLevel(delta: Int): Boolean {
+        val e = enrollment ?: return false
+        val st = programStatus ?: return false
+        if (st.phase.level.ordinal + e.levelOffset + delta !in 0..Level.entries.lastIndex) return false
+        enrollment = e.copy(levelOffset = e.levelOffset + delta)
         store.saveEnrollment(enrollment)
+        return true
     }
 
     // ---------- ajustes ----------
@@ -222,6 +240,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setAutoSync(on: Boolean) {
         settings = settings.copy(autoSync = on)
+        store.saveSettings(settings)
+    }
+
+    fun setReminder(on: Boolean) {
+        settings = settings.copy(reminderOn = on)
+        store.saveSettings(settings)
+        Reminder.schedule(getApplication())
+    }
+
+    fun setReminderTime(minutes: Int) {
+        settings = settings.copy(reminderMinutes = ((minutes % 1440) + 1440) % 1440)
+        store.saveSettings(settings)
+        Reminder.schedule(getApplication())
+    }
+
+    fun setWeight(kg: Int) {
+        settings = settings.copy(weightKg = kg.coerceIn(0, 300))
         store.saveSettings(settings)
     }
 
@@ -269,9 +304,51 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---------- treino ----------
+    /** Grava o treino em andamento (chamado a cada mudança de etapa, não a cada tick). */
+    private fun persist() {
+        val w = workout
+        if (w == null || w.phase == Phase.DONE) {
+            store.saveWorkout(null)
+            return
+        }
+        store.saveWorkout(
+            JSONObject()
+                .put("planId", w.plan.id).put("level", w.plan.level.ordinal).put("deload", w.plan.deload)
+                .put("startedAt", w.startedAt).put("index", w.index).put("setNo", w.setNo).put("side", w.side)
+                .put("phase", w.phase.name).put("paused", w.paused)
+                .put("endAt", w.endAt).put("leftMs", w.leftMs).put("totalMs", w.totalMs)
+        )
+    }
+
+    /** Se o app foi encerrado no meio de um treino (até 8 h atrás), volta para ele. */
+    private fun restoreWorkout() {
+        val o = store.workout() ?: return
+        try {
+            if (System.currentTimeMillis() - o.getLong("startedAt") > 8 * 3600_000L) {
+                store.saveWorkout(null)
+                return
+            }
+            val plan = Catalog.plan(o.getString("planId")).forLevel(Level.clamp(o.getInt("level")), o.getBoolean("deload"))
+            val w = WorkoutState(plan, o.getLong("startedAt"))
+            w.index = o.getInt("index").coerceIn(0, plan.items.size - 1)
+            w.setNo = o.getInt("setNo")
+            w.side = o.optInt("side", 1)
+            w.phase = Phase.valueOf(o.getString("phase"))
+            w.paused = o.getBoolean("paused")
+            w.endAt = o.getLong("endAt")
+            w.leftMs = o.getLong("leftMs")
+            w.totalMs = o.getLong("totalMs")
+            workout = w
+            route = Route.Workout(plan.id)
+        } catch (e: Exception) {
+            store.saveWorkout(null)
+        }
+    }
+
     fun startWorkout(plan: Plan) {
         workout = WorkoutState(plan, System.currentTimeMillis())
         route = Route.Workout(plan.id)
+        persist()
     }
 
     fun quitWorkout() {
@@ -279,11 +356,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val level = workout?.plan?.level ?: Level.MEDIO
         val deload = workout?.plan?.deload ?: false
         workout = null
+        persist()
         route = if (planId != null) Route.PlanDetail(planId, level, deload) else Route.Home
     }
 
     fun closeFinishedWorkout() {
         workout = null
+        persist()
         route = Route.Progress
     }
 
@@ -296,6 +375,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun completeSet() {
         val w = workout ?: return
         val item = w.item
+        // exercício de um lado por vez: o primeiro lado não conta série; volta a esperar para o outro lado
+        if (item.exercise().perSide && w.side == 1) {
+            w.side = 2
+            w.phase = Phase.WORK
+            w.paused = false
+            persist()
+            return
+        }
+        w.side = 1
         when {
             w.setNo < item.sets -> {
                 w.setNo++
@@ -308,11 +396,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             else -> finish(w)
         }
+        persist()
     }
 
     fun skipRest() {
         val w = workout ?: return
         if (w.phase == Phase.REST) w.phase = Phase.WORK
+        persist()
     }
 
     fun addRest(seconds: Int) {
@@ -321,6 +411,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         w.endAt += seconds * 1000L
         w.totalMs += seconds * 1000L
         w.leftMs += seconds * 1000L
+        persist()
     }
 
     fun togglePause() {
@@ -333,6 +424,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             w.leftMs = (w.endAt - System.currentTimeMillis()).coerceAtLeast(0L)
             w.paused = true
         }
+        persist()
     }
 
     private fun beginCountdown(w: WorkoutState, phase: Phase, ms: Long) {
@@ -341,6 +433,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         w.totalMs = ms.coerceAtLeast(1L)
         w.leftMs = ms
         w.endAt = System.currentTimeMillis() + ms
+        persist()
     }
 
     private fun tick() {
@@ -349,7 +442,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         w.leftMs = (w.endAt - System.currentTimeMillis()).coerceAtLeast(0L)
         if (w.leftMs <= 0L) {
             cue++
-            if (w.phase == Phase.REST) w.phase = Phase.WORK else completeSet()
+            if (w.phase == Phase.REST) { w.phase = Phase.WORK; persist() } else completeSet()
         }
     }
 

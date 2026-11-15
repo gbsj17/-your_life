@@ -155,6 +155,10 @@ object Programs {
     private val byId = all.associateBy { it.id }
     fun get(id: String): Program? = byId[id]
 
+    /** Todos os treinos que aparecem nas semanas do programa. */
+    fun planIds(program: Program): Set<String> =
+        program.phases.flatMap { it.week.filterNotNull() }.toSet()
+
     fun defaultDays(program: Program): List<Int> = program.phases.map { it.days }
 
     fun totalDays(days: List<Int>) = days.sum()

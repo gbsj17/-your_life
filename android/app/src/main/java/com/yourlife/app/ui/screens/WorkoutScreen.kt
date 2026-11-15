@@ -52,6 +52,7 @@ import com.yourlife.app.AppViewModel
 import com.yourlife.app.Phase
 import com.yourlife.app.WorkoutState
 import com.yourlife.app.data.exercise
+import com.yourlife.app.data.perSide
 import com.yourlife.app.ui.components.AppCard
 import com.yourlife.app.ui.components.AppIcon
 import com.yourlife.app.ui.components.ExerciseFigure
@@ -179,13 +180,14 @@ private fun WorkContent(vm: AppViewModel, w: WorkoutState) {
             Text(ex.name, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 InfoChip("Série ${w.setNo} de ${item.sets}", highlight = true)
+                if (ex.perSide) InfoChip("Lado ${w.side} de 2", highlight = true)
                 InfoChip(ex.muscles.first().label)
             }
         }
 
         if (item.seconds == null) {
             Text(
-                "${item.reps} repetições",
+                "${item.reps} repetições" + if (ex.perSide) " por lado" else "",
                 fontSize = 40.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -205,7 +207,7 @@ private fun WorkContent(vm: AppViewModel, w: WorkoutState) {
             }
         } else {
             Text(
-                "${item.seconds} segundos",
+                "${item.seconds} segundos" + if (ex.perSide) " por lado" else "",
                 fontSize = 40.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -213,11 +215,22 @@ private fun WorkContent(vm: AppViewModel, w: WorkoutState) {
         }
 
         when {
-            item.seconds == null -> PrimaryButton("Concluir série", { vm.completeSet() }, icon = AppIcons.Check)
+            item.seconds == null -> PrimaryButton(
+                if (ex.perSide) "Concluir lado ${w.side}" else "Concluir série",
+                { vm.completeSet() }, icon = AppIcons.Check
+            )
             w.phase == Phase.WORK -> PrimaryButton("Iniciar", { vm.startTimed() }, icon = AppIcons.Play)
             else -> SecondaryButton("Concluir agora", { vm.completeSet() }, Modifier.fillMaxWidth(), icon = AppIcons.Check)
         }
 
+        if (ex.perSide) {
+            Text(
+                "Faça um lado e depois troque de lado. A série só conta depois dos dois lados.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
+            )
+        }
         Text(
             ex.steps.first(),
             style = MaterialTheme.typography.bodyMedium,

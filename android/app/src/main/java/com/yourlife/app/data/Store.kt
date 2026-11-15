@@ -11,6 +11,7 @@ class Store(context: Context) {
     private val settingsKey = "settings.v1"
     private val enrollKey = "enrollment.v1"
     private val swapsKey = "swaps.v1"
+    private val workoutKey = "workout.v1"
 
     fun history(): List<Session> {
         val raw = prefs.getString(historyKey, null) ?: return emptyList()
@@ -67,7 +68,13 @@ class Store(context: Context) {
         val raw = prefs.getString(settingsKey, null) ?: return Settings()
         return try {
             val o = JSONObject(raw)
-            Settings(theme = o.optInt("theme", 0), autoSync = o.optBoolean("autoSync", true))
+            Settings(
+                theme = o.optInt("theme", 0),
+                autoSync = o.optBoolean("autoSync", true),
+                reminderOn = o.optBoolean("reminderOn", false),
+                reminderMinutes = o.optInt("reminderMinutes", 18 * 60),
+                weightKg = o.optInt("weightKg", 0)
+            )
         } catch (e: Exception) {
             Settings()
         }
@@ -75,7 +82,14 @@ class Store(context: Context) {
 
     fun saveSettings(s: Settings) {
         prefs.edit()
-            .putString(settingsKey, JSONObject().put("theme", s.theme).put("autoSync", s.autoSync).toString())
+            .putString(
+                settingsKey,
+                JSONObject()
+                    .put("theme", s.theme).put("autoSync", s.autoSync)
+                    .put("reminderOn", s.reminderOn).put("reminderMinutes", s.reminderMinutes)
+                    .put("weightKg", s.weightKg)
+                    .toString()
+            )
             .apply()
     }
 
@@ -125,5 +139,17 @@ class Store(context: Context) {
         val o = JSONObject()
         m.forEach { (k, v) -> o.put(k, v) }
         prefs.edit().putString(swapsKey, o.toString()).apply()
+    }
+
+    /** Treino em andamento, para continuar se o Android encerrar o app. null apaga. */
+    fun saveWorkout(o: JSONObject?) {
+        if (o == null) prefs.edit().remove(workoutKey).apply()
+        else prefs.edit().putString(workoutKey, o.toString()).apply()
+    }
+
+    fun workout(): JSONObject? = try {
+        prefs.getString(workoutKey, null)?.let { JSONObject(it) }
+    } catch (e: Exception) {
+        null
     }
 }

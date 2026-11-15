@@ -25,7 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yourlife.app.AppViewModel
+import com.yourlife.app.data.Energy
 import com.yourlife.app.data.Session
+import com.yourlife.app.ui.components.BarProgress
 import com.yourlife.app.ui.components.AppCard
 import com.yourlife.app.ui.components.AppIcon
 import com.yourlife.app.ui.components.IconBubble
@@ -82,6 +84,37 @@ fun ProgressScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     StatTile("$streak", "dias seguidos", Modifier.weight(1f))
                     StatTile("$minutes", "minutos treinados", Modifier.weight(1f))
+                }
+            }
+        }
+        item {
+            val since = today.minusDays(6).toString()
+            val recent = history.filter { it.date >= since }
+            val min7 = Math.round(recent.sumOf { it.seconds } / 60f)
+            val kg = vm.settings.weightKg
+            AppCard {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Atividade dos últimos 7 dias", style = MaterialTheme.typography.titleMedium)
+                    BarProgress(min7 / Energy.WEEKLY_GOAL_MIN.toFloat())
+                    Text(
+                        "$min7 de ${Energy.WEEKLY_GOAL_MIN} min",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        if (kg > 0) "Gasto estimado: cerca de ${Math.round(recent.sumOf { Energy.kcal(it, kg) }).toInt()} kcal"
+                        else "Informe seu peso em Ajustes para ver uma estimativa de calorias.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "150 min por semana é o mínimo de atividade moderada que o ACSM recomenda para saúde; " +
+                            "para perda de peso significativa, a evidência aponta mais de 250 min por semana " +
+                            "(somando caminhadas e outras atividades). As calorias são uma estimativa por MET, não uma medição. " +
+                            "Para perder gordura, combinar o treino com redução calórica funciona melhor do que só treinar, " +
+                            "e a evidência não mostra que exercitar uma região tire a gordura dela.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

@@ -587,3 +587,6 @@ object Catalog {
 }
 
 fun PlanItem.exercise(): Exercise = Catalog.exercise(exerciseId)
+
+/** Exercícios feitos um lado de cada vez (o nome já traz "cada lado"). */
+val Exercise.perSide: Boolean get() = name.contains("cada lado")

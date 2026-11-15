@@ -11,6 +11,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -109,9 +113,21 @@ private fun MyPlanCard(vm: AppViewModel, st: ProgramStatus) {
                         color = scheme.onSurfaceVariant
                     )
                 }
+                var limitMsg by remember { mutableStateOf<String?>(null) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SecondaryButton("Mais fácil", { vm.shiftLevel(-1) }, Modifier.weight(1f), AppIcons.Minus)
-                    SecondaryButton("Mais difícil", { vm.shiftLevel(1) }, Modifier.weight(1f), AppIcons.Plus)
+                    SecondaryButton(
+                        "Mais fácil",
+                        { limitMsg = if (vm.shiftLevel(-1)) null else "Você já está no nível mais fácil." },
+                        Modifier.weight(1f), AppIcons.Minus
+                    )
+                    SecondaryButton(
+                        "Mais difícil",
+                        { limitMsg = if (vm.shiftLevel(1)) null else "Você já está no nível mais difícil." },
+                        Modifier.weight(1f), AppIcons.Plus
+                    )
+                }
+                limitMsg?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = scheme.primary)
                 }
                 val off = vm.enrollment?.levelOffset ?: 0
                 if (off != 0) {

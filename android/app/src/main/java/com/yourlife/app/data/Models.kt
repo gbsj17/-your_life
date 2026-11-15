@@ -122,5 +122,8 @@ data class Session(
 
 data class Settings(
     val theme: Int = 0,        // 0 = sistema, 1 = claro, 2 = escuro
-    val autoSync: Boolean = true
+    val autoSync: Boolean = true,
+    val reminderOn: Boolean = false,
+    val reminderMinutes: Int = 18 * 60,   // horário do lembrete, em minutos desde meia-noite
+    val weightKg: Int = 0                 // 0 = não informado (usado só na estimativa de calorias)
 )

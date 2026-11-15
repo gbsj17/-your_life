@@ -13,7 +13,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /** Dados do último release publicado no GitHub. */
-class UpdateInfo(val versionCode: Int, val versionName: String, val apkUrl: String, val sizeBytes: Long)
+class UpdateInfo(val versionCode: Int, val versionName: String, val apkUrl: String, val sizeBytes: Long, val sha256: String? = null)
 
 /** Verifica, baixa e instala novas versões a partir dos Releases do GitHub (repositório público). */
 object Updater {
@@ -39,15 +39,17 @@ object Updater {
             val assets = o.getJSONArray("assets")
             var url: String? = null
             var size = 0L
+            var sha: String? = null
             for (i in 0 until assets.length()) {
                 val a = assets.getJSONObject(i)
                 if (a.getString("name").endsWith(".apk")) {
                     url = a.getString("browser_download_url")
                     size = a.optLong("size", 0L)
+                    sha = a.optString("digest").removePrefix("sha256:").takeIf { it.length == 64 }
                     break
                 }
             }
-            UpdateInfo(code, tag.removePrefix("v"), url ?: error("Release sem APK"), size)
+            UpdateInfo(code, tag.removePrefix("v"), url ?: error("Release sem APK"), size, sha)
         } finally {
             conn.disconnect()
         }
@@ -66,6 +68,7 @@ object Updater {
                 if (conn.responseCode != 200) error("Download falhou (${conn.responseCode})")
                 val total = conn.contentLengthLong.takeIf { it > 0 } ?: info.sizeBytes
                 var done = 0L
+                val md = java.security.MessageDigest.getInstance("SHA-256")
                 conn.inputStream.use { input ->
                     out.outputStream().use { output ->
                         val buf = ByteArray(32 * 1024)
@@ -73,10 +76,17 @@ object Updater {
                             val n = input.read(buf)
                             if (n < 0) break
                             output.write(buf, 0, n)
+                            md.update(buf, 0, n)
                             done += n
                             if (total > 0) onProgress(done / total.toFloat())
                         }
                     }
+                }
+                // confere o SHA-256 publicado pelo GitHub (quando informado)
+                val actual = md.digest().joinToString("") { "%02x".format(it) }
+                if (info.sha256 != null && !actual.equals(info.sha256, ignoreCase = true)) {
+                    out.delete()
+                    throw IllegalStateException("integridade")
                 }
                 out
             } finally {

@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +21,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.core.content.ContextCompat
+import com.yourlife.app.ui.components.RoundIconButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -161,6 +168,13 @@ fun SettingsScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
             }
         }
 
+        item { SectionTitle("Lembrete de treino", Modifier.padding(top = 8.dp)) }
+        item { ReminderCard(vm) }
+        item { SectionTitle("Seu peso", Modifier.padding(top = 8.dp)) }
+        item { WeightCard(vm) }
+        item { SectionTitle("Base científica", Modifier.padding(top = 8.dp)) }
+        item { SourcesCard() }
+
         item { SectionTitle("Atualização", Modifier.padding(top = 8.dp)) }
         item { UpdateCard(vm) }
     }
@@ -274,6 +288,109 @@ private fun UpdateCard(vm: AppViewModel) {
                 is UpdateState.Failed -> {
                     Text(u.message, style = MaterialTheme.typography.bodyMedium, color = scheme.error)
                     SecondaryButton("Tentar de novo", { vm.checkUpdate() }, Modifier.fillMaxWidth())
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReminderCard(vm: AppViewModel) {
+    val context = LocalContext.current
+    val scheme = MaterialTheme.colorScheme
+    val s = vm.settings
+    val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) vm.setReminder(true)
+    }
+    AppCard {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Avisar no horário do treino", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                Switch(checked = s.reminderOn, onCheckedChange = { on ->
+                    val needs = android.os.Build.VERSION.SDK_INT >= 33 &&
+                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) !=
+                        android.content.pm.PackageManager.PERMISSION_GRANTED
+                    if (on && needs) notifLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                    else vm.setReminder(on)
+                })
+            }
+            if (s.reminderOn) {
+                val h = s.reminderMinutes / 60
+                val m = s.reminderMinutes % 60
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Hora", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    RoundIconButton(AppIcons.Minus, "Uma hora a menos", { vm.setReminderTime(s.reminderMinutes - 60) })
+                    Text("%02d".format(h), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 14.dp))
+                    RoundIconButton(AppIcons.Plus, "Uma hora a mais", { vm.setReminderTime(s.reminderMinutes + 60) })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Minutos", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    RoundIconButton(AppIcons.Minus, "15 minutos a menos", { vm.setReminderTime(s.reminderMinutes - 15) })
+                    Text("%02d".format(m), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 14.dp))
+                    RoundIconButton(AppIcons.Plus, "15 minutos a mais", { vm.setReminderTime(s.reminderMinutes + 15) })
+                }
+            }
+            Text(
+                "O lembrete não aparece se você já treinou no dia. O Android pode atrasar o aviso alguns minutos. " +
+                    "Em alguns aparelhos (como Xiaomi) pode ser preciso permitir início automático e uso sem restrição de bateria.",
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeightCard(vm: AppViewModel) {
+    val kg = vm.settings.weightKg
+    AppCard {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Peso (kg)", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        if (kg == 0) "Não informado" else "$kg kg",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                RoundIconButton(AppIcons.Minus, "1 kg a menos", { vm.setWeight(if (kg == 0) 70 else kg - 1) })
+                Spacer(Modifier.width(10.dp))
+                RoundIconButton(AppIcons.Plus, "1 kg a mais", { vm.setWeight(if (kg == 0) 70 else kg + 1) })
+            }
+            Text(
+                "Usado só para estimar as calorias dos treinos, no seu aparelho. Fica salvo apenas aqui.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private class Source(val title: String, val note: String, val url: String)
+
+private val SOURCES = listOf(
+    Source("ACSM: atividade física para perder peso (2009)", "Volume semanal de atividade e perda de peso; dieta + exercício.", "https://pubmed.ncbi.nlm.nih.gov/19127177/"),
+    Source("Schoenfeld e cols.: volume semanal e hipertrofia", "Mais séries por semana por músculo, mais ganho (até pelo menos 10).", "https://doi.org/10.1080/02640414.2016.1210197"),
+    Source("Yarizadeh e cols. (2020): gordura abdominal", "Aeróbico, força e combinado reduzem a gordura abdominal; combinado é melhor.", "https://doi.org/10.1093/advances/nmaa090"),
+    Source("Ramírez-Campillo e cols. (2021): redução localizada", "Meta-análise: treino localizado não reduziu a gordura da região.", "https://hummov.awf.wroc.pl/A-proposed-model-to-test-the-hypothesis-of-exercise-induced-localized-fat-reduction,143162,0,2.html"),
+    Source("Brobakken e cols. (2023): estudo contrário", "16 homens: mais perda no tronco, mas a perda total foi parecida.", "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10680576/"),
+    Source("Compendium of Physical Activities", "Valores de MET usados na estimativa de calorias.", "https://pacompendium.com/conditioning-exercise")
+)
+
+@Composable
+private fun SourcesCard() {
+    val uri = LocalUriHandler.current
+    AppCard {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                "De onde vêm as orientações do app. A divisão exata das semanas e a escala por nível são adaptações do app, não protocolos de um estudo.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            SOURCES.forEach { src ->
+                Column(Modifier.clickable { uri.openUri(src.url) }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(src.title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                    Text(src.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
