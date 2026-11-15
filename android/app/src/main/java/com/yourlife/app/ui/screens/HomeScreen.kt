@@ -19,6 +19,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.yourlife.app.data.Enrollment
+import com.yourlife.app.data.ProgramStatus
+import com.yourlife.app.data.Programs
+import com.yourlife.app.ui.components.BarProgress
+import com.yourlife.app.ui.components.SecondaryButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,12 +53,14 @@ import java.util.Locale
 fun HomeScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
     val today = LocalDate.now()
     val status = vm.programStatus
-    val programPlan = status?.todayPlan
+    var followPlan by remember { mutableStateOf(true) }
+    val planMode = status != null && !status.finished && followPlan
+    val programPlan = if (planMode) status?.todayPlan else null
     val suggested = programPlan ?: Catalog.suggestionFor(today.dayOfWeek)
     val heroLabel = when {
-        programPlan != null -> "PLANO · DIA ${status?.dayNumber} DE ${status?.totalDays}"
-        status != null && !status.finished -> "DIA DE DESCANSO NO PLANO · SUGESTÃO LIVRE"
-        else -> "SUGESTÃO DE HOJE"
+        programPlan != null -> "TREINO DE HOJE NO PLANO"
+        planMode -> "DIA DE DESCANSO NO PLANO · SUGESTÃO LIVRE"
+        else -> "TREINO ALEATÓRIO DO DIA"
     }
     val trainedToday = vm.history.any { it.date == today.toString() }
     val hour = LocalTime.now().hour
@@ -74,6 +85,14 @@ fun HomeScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+        item {
+            val e = vm.enrollment
+            if (status != null && e != null && !status.finished) {
+                PlanProgressCard(vm, status, e, followPlan) { followPlan = it }
+            } else {
+                NoPlanCard { vm.route = Route.Plans }
             }
         }
         item { HeroCard(suggested, heroLabel, trainedToday) { vm.route = Route.PlanDetail(suggested.id, suggested.level, suggested.deload) } }
@@ -185,6 +204,87 @@ private fun PlanCard(plan: Plan, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 InfoChip(plan.focus.take(2).joinToString(" · ") { it.label })
+            }
+            AppIcon(AppIcons.Chevron, tint = MaterialTheme.colorScheme.onSurfaceVariant, size = 20.dp)
+        }
+    }
+}
+
+@Composable
+private fun PlanProgressCard(
+    vm: AppViewModel,
+    st: ProgramStatus,
+    e: Enrollment,
+    followPlan: Boolean,
+    onMode: (Boolean) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val planned = Programs.plannedTotal(e)
+    val done = vm.history.count { java.time.LocalDate.parse(it.date).toEpochDay() >= e.startDay }
+    val remaining = (planned - done).coerceAtLeast(0)
+    AppCard {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("MEU PLANO", style = MaterialTheme.typography.labelMedium, color = scheme.primary)
+                    Text(st.program.name, style = MaterialTheme.typography.titleLarge)
+                }
+                InfoChip(st.level.label, highlight = true)
+            }
+            BarProgress(if (planned > 0) done / planned.toFloat() else 0f)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("$done feitos", style = MaterialTheme.typography.titleMedium, color = scheme.primary)
+                Text("faltam $remaining de $planned", style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+            }
+            Text(
+                "Dia ${st.dayNumber} de ${st.totalDays}" + if (st.deload) " · semana leve" else "",
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ModeChip("Seguir plano", followPlan, Modifier.weight(1f)) { onMode(true) }
+                ModeChip("Treino do dia", !followPlan, Modifier.weight(1f)) { onMode(false) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModeChip(text: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        color = if (selected) scheme.primary else scheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) scheme.primary else scheme.outlineVariant)
+    ) {
+        Box(Modifier.padding(vertical = 11.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (selected) scheme.onPrimary else scheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun NoPlanCard(onClick: () -> Unit) {
+    AppCard(onClick = onClick) {
+        Row(
+            Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            IconBubble(AppIcons.Calendar, size = 52.dp)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Siga um plano", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Escolha um objetivo e acompanhe quantos treinos já fez e quantos faltam.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             AppIcon(AppIcons.Chevron, tint = MaterialTheme.colorScheme.onSurfaceVariant, size = 20.dp)
         }

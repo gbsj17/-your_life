@@ -157,6 +157,22 @@ object Programs {
 
     fun totalDays(days: List<Int>) = days.sum()
 
+    /** Total de treinos previstos no programa inteiro (conta os dias não vazios de cada semana). */
+    fun plannedTotal(e: Enrollment): Int {
+        val program = get(e.programId) ?: return 0
+        var count = 0
+        var day = 0
+        for ((i, days) in e.phaseDays.withIndex()) {
+            val week = program.phases[i].week
+            repeat(days) {
+                val dow = LocalDate.ofEpochDay(e.startDay + day).dayOfWeek.value - 1
+                if (week[dow] != null) count++
+                day++
+            }
+        }
+        return count
+    }
+
     /** Estado do programa na data `today`. */
     fun status(e: Enrollment, today: LocalDate = LocalDate.now()): ProgramStatus? {
         val program = get(e.programId) ?: return null
