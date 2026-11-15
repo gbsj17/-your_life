@@ -7,6 +7,20 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,9 +76,11 @@ fun RoundIconButton(
     container: Color = MaterialTheme.colorScheme.surface,
     tint: Color = MaterialTheme.colorScheme.onSurface
 ) {
+    val src = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
-        modifier = modifier.size(44.dp),
+        interactionSource = src,
+        modifier = modifier.size(44.dp).pressScale(src),
         shape = CircleShape,
         color = container,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -77,9 +93,11 @@ fun RoundIconButton(
 
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+    val src = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(56.dp),
+        interactionSource = src,
+        modifier = modifier.fillMaxWidth().height(56.dp).pressScale(src),
         shape = RoundedCornerShape(18.dp)
     ) {
         if (icon != null) {
@@ -92,9 +110,11 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
 
 @Composable
 fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+    val src = remember { MutableInteractionSource() }
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.height(56.dp),
+        interactionSource = src,
+        modifier = modifier.height(56.dp).pressScale(src),
         shape = RoundedCornerShape(18.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
@@ -147,9 +167,11 @@ fun AppCard(
     val shape = RoundedCornerShape(20.dp)
     val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     if (onClick != null) {
+        val src = remember { MutableInteractionSource() }
         Surface(
             onClick = onClick,
-            modifier = modifier.fillMaxWidth(),
+            interactionSource = src,
+            modifier = modifier.fillMaxWidth().pressScale(src),
             shape = shape,
             color = MaterialTheme.colorScheme.surface,
             border = border,
@@ -257,10 +279,35 @@ fun LevelChips(selected: com.yourlife.app.data.Level, onSelect: (com.yourlife.ap
 /** Barra de progresso simples (0..1). */
 @Composable
 fun BarProgress(fraction: Float, modifier: Modifier = Modifier) {
+    val animated by animateFloatAsState(fraction.coerceIn(0f, 1f), tween(800), label = "bar")
     Box(modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant)) {
         Box(
-            Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).height(8.dp)
+            Modifier.fillMaxWidth(animated).height(8.dp)
                 .clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
         )
     }
+}
+
+/** Efeito de toque: o elemento encolhe levemente enquanto pressionado e volta com mola. */
+@Composable
+fun Modifier.pressScale(source: MutableInteractionSource): Modifier {
+    val pressed by source.collectIsPressedAsState()
+    val sc by animateFloatAsState(
+        if (pressed) 0.96f else 1f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "press"
+    )
+    return this.graphicsLayer { scaleX = sc; scaleY = sc }
+}
+
+/** Entrada escalonada: o item surge subindo e aparecendo, com atraso pelo índice (só os primeiros). */
+fun Modifier.staggerIn(index: Int): Modifier = composed {
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay((index.coerceAtMost(8) * 55L))
+        shown = true
+    }
+    val a by animateFloatAsState(if (shown) 1f else 0f, tween(380), label = "stagger-a")
+    val y by animateFloatAsState(if (shown) 0f else 28f, tween(420), label = "stagger-y")
+    this.graphicsLayer { alpha = a; translationY = y }
 }

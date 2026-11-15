@@ -1,6 +1,17 @@
 package com.yourlife.app.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -92,11 +103,15 @@ fun WorkoutScreen(vm: AppViewModel) {
             DoneContent(vm, w)
         } else {
             WorkoutHeader(vm, w, onClose = { confirmQuit = true })
-            Box(Modifier.weight(1f)) {
-                when (w.phase) {
-                    Phase.REST -> RestContent(vm, w)
-                    else -> WorkContent(vm, w)
-                }
+            AnimatedContent(
+                targetState = (w.phase == Phase.REST) to w.index,
+                modifier = Modifier.weight(1f),
+                transitionSpec = {
+                    (slideInVertically(tween(320)) { it / 12 } + fadeIn(tween(280))) togetherWith fadeOut(tween(140))
+                },
+                label = "workout-step"
+            ) { (resting, _) ->
+                if (resting) RestContent(vm, w) else WorkContent(vm, w)
             }
         }
     }
@@ -268,6 +283,13 @@ private fun RestContent(vm: AppViewModel, w: WorkoutState) {
 
 @Composable
 private fun DoneContent(vm: AppViewModel, w: WorkoutState) {
+    var popped by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { popped = true }
+    val pop by animateFloatAsState(
+        if (popped) 1f else 0.2f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "trophy"
+    )
     Column(
         Modifier
             .fillMaxSize()
@@ -280,6 +302,7 @@ private fun DoneContent(vm: AppViewModel, w: WorkoutState) {
         Box(
             Modifier
                 .size(96.dp)
+                .graphicsLayer { scaleX = pop; scaleY = pop; alpha = pop.coerceIn(0f, 1f) }
                 .background(Yl.extra.success, RoundedCornerShape(32.dp)),
             contentAlignment = Alignment.Center
         ) {

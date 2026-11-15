@@ -5,6 +5,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -53,7 +55,21 @@ fun YourLifeApp(vm: AppViewModel) {
         Box(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
             AnimatedContent(
                 targetState = route,
-                transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(140)) },
+                transitionSpec = {
+                    val from = initialState
+                    val to = targetState
+                    when {
+                        // trocar o nível dentro do mesmo treino: só um fade rápido
+                        from is Route.PlanDetail && to is Route.PlanDetail ->
+                            fadeIn(tween(140)) togetherWith fadeOut(tween(100))
+                        routeOrder(to) >= routeOrder(from) ->
+                            (slideInHorizontally(tween(300)) { it / 5 } + fadeIn(tween(260))) togetherWith
+                                (slideOutHorizontally(tween(240)) { -it / 8 } + fadeOut(tween(160)))
+                        else ->
+                            (slideInHorizontally(tween(300)) { -it / 5 } + fadeIn(tween(260))) togetherWith
+                                (slideOutHorizontally(tween(240)) { it / 8 } + fadeOut(tween(160)))
+                    }
+                },
                 label = "route"
             ) { r ->
                 when (r) {
@@ -102,4 +118,15 @@ private fun androidx.compose.foundation.layout.RowScope.BarItem(
             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     )
+}
+
+/** Ordem para decidir a direção da transição: abas da esquerda para a direita, telas de detalhe à frente delas. */
+private fun routeOrder(r: Route): Int = when (r) {
+    Route.Home -> 0
+    Route.Plans -> 1
+    Route.Progress -> 2
+    Route.Settings -> 3
+    is Route.PlanDetail -> 10
+    is Route.ProgramDetail -> 11
+    is Route.Workout -> 20
 }

@@ -1,6 +1,11 @@
 package com.yourlife.app.ui.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
@@ -28,6 +33,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
@@ -94,24 +102,24 @@ fun ExerciseFigure(
 ) {
     val geo = ANIM_GEOMETRY[exercise.anim] ?: return
     val scheme = MaterialTheme.colorScheme
-    val near = scheme.primary
-    val far = scheme.primary.copy(alpha = 0.42f)
+    val palette = Palette(shirt = scheme.primary)
     val propColor = scheme.outline
     val groundColor = scheme.outline
 
     val progress: State<Float> = if (animate) {
         val transition = rememberInfiniteTransition(label = "figure")
         val move = exercise.cycleMs
-        val hold = 260
+        val hold = 320
+        val ease = CubicBezierEasing(0.45f, 0f, 0.55f, 1f)
         transition.animateFloat(
             initialValue = 0f,
             targetValue = 0f,
             animationSpec = infiniteRepeatable(
                 animation = keyframes {
                     durationMillis = 2 * move + 2 * hold
-                    0f at 0 using FastOutSlowInEasing
+                    0f at 0 using ease
                     1f at move
-                    1f at (move + hold) using FastOutSlowInEasing
+                    1f at (move + hold) using ease
                     0f at (2 * move + hold)
                     0f at (2 * move + 2 * hold)
                 },
@@ -133,7 +141,7 @@ fun ExerciseFigure(
             .background(scheme.surfaceVariant)
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            drawFigure(geo.props, mix(geo.a, geo.b, progress.value), near, far, propColor, groundColor)
+            drawFigure(geo.props, mix(geo.a, geo.b, progress.value), palette, propColor, groundColor)
         }
         if (showPhase) {
             Surface(
@@ -141,31 +149,133 @@ fun ExerciseFigure(
                 shape = RoundedCornerShape(50),
                 color = scheme.surface.copy(alpha = 0.85f)
             ) {
-                Text(
-                    text = if (inB) exercise.phaseB else exercise.phaseA,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = scheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
+                AnimatedContent(
+                    targetState = if (inB) exercise.phaseB else exercise.phaseA,
+                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+                    label = "phase"
+                ) { label ->
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = scheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
     }
 }
 
+private class Palette(shirt: Color) {
+    val shirt = shirt
+    val shirtFar = lerp(shirt, Color.Black, 0.28f)
+    val skin = Color(0xFFE2AE8E)
+    val skinFar = Color(0xFFC48E70)
+    val shorts = Color(0xFF2C3442)
+    val shortsFar = Color(0xFF1F2530)
+    val shoe = Color(0xFFF1F3F7)
+    val shoeFar = Color(0xFFC9CED8)
+    val hair = Color(0xFF3B2A22)
+}
+
+/** Direção da luz na tela (de cima, um pouco da esquerda), para dar volume aos membros. */
+private val LIGHT = Offset(-0.45f, -0.9f)
+
+/** Cápsula afunilada (de A até B, com raios ra e rb) com realce e sombra para parecer volumétrica. */
+private fun DrawScope.capsule(a: Offset, b: Offset, ra: Float, rb: Float, color: Color, volume: Boolean = true) {
+    val dx = b.x - a.x
+    val dy = b.y - a.y
+    val len = max(hypot(dx, dy), 1e-3f)
+    val nx = -dy / len
+    val ny = dx / len
+    fun body(pa: Offset, pb: Offset, r1: Float, r2: Float, c: Color) {
+        val path = Path().apply {
+            moveTo(pa.x + nx * r1, pa.y + ny * r1)
+            lineTo(pb.x + nx * r2, pb.y + ny * r2)
+            lineTo(pb.x - nx * r2, pb.y - ny * r2)
+            lineTo(pa.x - nx * r1, pa.y - ny * r1)
+            close()
+        }
+        drawPath(path, c)
+        drawCircle(c, r1, pa)
+        drawCircle(c, r2, pb)
+    }
+    body(a, b, ra, rb, color)
+    if (volume) {
+        // lado voltado para a luz recebe um realce; o oposto, uma sombra
+        val toward = if (nx * LIGHT.x + ny * LIGHT.y >= 0f) 1f else -1f
+        val sx = nx * toward
+        val sy = ny * toward
+        body(
+            Offset(a.x + sx * ra * 0.38f, a.y + sy * ra * 0.38f),
+            Offset(b.x + sx * rb * 0.38f, b.y + sy * rb * 0.38f),
+            ra * 0.38f, rb * 0.38f, Color.White.copy(alpha = 0.20f)
+        )
+        body(
+            Offset(a.x - sx * ra * 0.55f, a.y - sy * ra * 0.55f),
+            Offset(b.x - sx * rb * 0.55f, b.y - sy * rb * 0.55f),
+            ra * 0.4f, rb * 0.4f, Color.Black.copy(alpha = 0.12f)
+        )
+    }
+}
+
+private fun lerpOff(a: Offset, b: Offset, t: Float) = Offset(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+
+/** Tronco: contorno com ombros, peito, cintura e quadril, entre o quadril (a) e o ombro (b). */
+private fun DrawScope.torso(a: Offset, b: Offset, s: Float, t0: Float, t1: Float, color: Color) {
+    val dx = b.x - a.x
+    val dy = b.y - a.y
+    val len = max(hypot(dx, dy), 1e-3f)
+    val nx = -dy / len
+    val ny = dx / len
+    // (posição ao longo da coluna, meia largura) – em unidades do quadro
+    val prof = listOf(0f to 5.0f, 0.22f to 5.2f, 0.5f to 4.5f, 0.8f to 5.6f, 1f to 4.3f)
+    fun radiusAt(t: Float): Float {
+        for (k in 0 until prof.size - 1) {
+            val (ta, ra) = prof[k]
+            val (tb, rb) = prof[k + 1]
+            if (t <= tb) {
+                val u = ((t - ta) / (tb - ta)).coerceIn(0f, 1f)
+                val e = u * u * (3f - 2f * u)
+                return (ra + (rb - ra) * e) * s
+            }
+        }
+        return prof.last().second * s
+    }
+    val steps = 14
+    val left = ArrayList<Offset>()
+    val right = ArrayList<Offset>()
+    for (i in 0..steps) {
+        val t = t0 + (t1 - t0) * i / steps
+        val c = lerpOff(a, b, t)
+        val r = radiusAt(t)
+        left.add(Offset(c.x + nx * r, c.y + ny * r))
+        right.add(Offset(c.x - nx * r, c.y - ny * r))
+    }
+    val path = Path().apply {
+        moveTo(left[0].x, left[0].y)
+        left.drop(1).forEach { lineTo(it.x, it.y) }
+        right.asReversed().forEach { lineTo(it.x, it.y) }
+        close()
+    }
+    drawPath(path, color)
+    drawCircle(color, radiusAt(t0), lerpOff(a, b, t0))
+    drawCircle(color, radiusAt(t1), lerpOff(a, b, t1))
+}
+
 private fun DrawScope.drawFigure(
     props: List<com.yourlife.app.data.Prop>,
     p: FloatArray,
-    near: androidx.compose.ui.graphics.Color,
-    far: androidx.compose.ui.graphics.Color,
-    propColor: androidx.compose.ui.graphics.Color,
-    groundColor: androidx.compose.ui.graphics.Color
+    pal: Palette,
+    propColor: Color,
+    groundColor: Color
 ) {
     val s = size.width / 100f
     val groundY = size.height - 6f * s
     fun pt(x: Float, y: Float) = Offset(x * s, groundY - y * s)
 
     // chão
-    drawLine(groundColor, Offset(0f, groundY), Offset(size.width, groundY), strokeWidth = 2f * s * 0.5f)
+    drawLine(groundColor, Offset(0f, groundY), Offset(size.width, groundY), strokeWidth = 1f * s)
 
     // objetos de cena
     props.forEach { pr ->
@@ -183,8 +293,6 @@ private fun DrawScope.drawFigure(
     val shX = hipX + TORSO * cos(rad(p[2]))
     val shY = hipY + TORSO * sin(rad(p[2]))
     val hAng = p[2] + p[3]
-    val neckX = shX + NECK * cos(rad(hAng))
-    val neckY = shY + NECK * sin(rad(hAng))
     val headX = shX + (NECK + HEAD_R) * cos(rad(hAng))
     val headY = shY + (NECK + HEAD_R) * sin(rad(hAng))
 
@@ -193,39 +301,72 @@ private fun DrawScope.drawFigure(
     val legN = ik(hipX, hipY, p[10], p[11], TH, SH, p[12])
     val legF = ik(hipX, hipY, p[13], p[14], TH, SH, p[15])
 
-    val limbW = 3.4f * s
-    val torsoW = 4.4f * s
-
-    fun limb(root: Offset, l: FloatArray, color: androidx.compose.ui.graphics.Color) {
-        val j = pt(l[0], l[1])
-        val e = pt(l[2], l[3])
-        drawLine(color, root, j, strokeWidth = limbW, cap = StrokeCap.Round)
-        drawLine(color, j, e, strokeWidth = limbW, cap = StrokeCap.Round)
-    }
-
-    fun foot(l: FloatArray, angle: Float, color: androidx.compose.ui.graphics.Color) {
-        val e = pt(l[2], l[3])
-        val t = pt(l[2] + FOOT * cos(rad(angle)), l[3] + FOOT * sin(rad(angle)))
-        drawLine(color, e, t, strokeWidth = limbW * 0.9f, cap = StrokeCap.Round)
-    }
-
     val hipO = pt(hipX, hipY)
     val shO = pt(shX, shY)
 
-    // membros do lado de trás (mais claros)
-    limb(shO, armF, far)
-    limb(hipO, legF, far)
-    foot(legF, p[17], far)
+    // sombra de contato no chão, do tamanho do corpo
+    val xs = listOf(hipX, shX, headX, legN[2], legF[2], armN[2], armF[2])
+    val x0 = xs.min()
+    val x1 = xs.max()
+    drawOval(
+        Color.Black.copy(alpha = 0.13f),
+        topLeft = Offset((x0 - 1f) * s, groundY - 1.2f * s),
+        size = Size((x1 - x0 + 2f) * s, 2.8f * s)
+    )
 
-    // tronco e pescoço
-    drawLine(near, hipO, shO, strokeWidth = torsoW, cap = StrokeCap.Round)
-    drawLine(near, shO, pt(neckX, neckY), strokeWidth = limbW, cap = StrokeCap.Round)
+    fun arm(l: FloatArray, far: Boolean) {
+        val sk = if (far) pal.skinFar else pal.skin
+        val sleeve = if (far) pal.shirtFar else pal.shirt
+        val e = pt(l[0], l[1])
+        val w = pt(l[2], l[3])
+        capsule(e, w, 2.5f * s, 1.9f * s, sk)                 // antebraço
+        capsule(shO, e, 3.1f * s, 2.5f * s, sk)               // braço
+        capsule(shO, lerpOff(shO, e, 0.5f), 3.3f * s, 2.9f * s, sleeve) // manga
+        drawCircle(sk, 2.2f * s, w)                           // mão
+    }
 
-    // membros do lado da frente
-    limb(hipO, legN, near)
-    foot(legN, p[16], near)
-    limb(shO, armN, near)
+    fun leg(l: FloatArray, footAngle: Float, far: Boolean) {
+        val sk = if (far) pal.skinFar else pal.skin
+        val sh = if (far) pal.shortsFar else pal.shorts
+        val shoe = if (far) pal.shoeFar else pal.shoe
+        val k = pt(l[0], l[1])
+        val a = pt(l[2], l[3])
+        capsule(k, a, 3.0f * s, 2.1f * s, sk)                 // canela
+        capsule(hipO, k, 4.7f * s, 3.2f * s, sk)              // coxa
+        capsule(hipO, lerpOff(hipO, k, 0.52f), 4.9f * s, 4.1f * s, sh)  // bermuda
+        val toe = pt(l[2] + 6.5f * cos(rad(footAngle)), l[3] + 6.5f * sin(rad(footAngle)))
+        capsule(a, toe, 2.5f * s, 1.8f * s, shoe)             // tênis
+    }
 
-    // cabeça
-    drawCircle(near, radius = HEAD_R * s, center = pt(headX, headY))
+    // lado de trás
+    arm(armF, true)
+    leg(legF, p[17], true)
+
+    // tronco: camiseta e, na base, a bermuda
+    torso(hipO, shO, s, 0f, 1f, pal.shirt)
+    torso(hipO, shO, s, 0f, 0.26f, pal.shorts)
+    // volume do tronco
+    drawLine(
+        Color.White.copy(alpha = 0.14f),
+        lerpOff(hipO, shO, 0.3f).let { Offset(it.x + LIGHT.x * 2.2f * s, it.y + LIGHT.y * 2.2f * s) },
+        lerpOff(hipO, shO, 0.95f).let { Offset(it.x + LIGHT.x * 2.2f * s, it.y + LIGHT.y * 2.2f * s) },
+        strokeWidth = 2.6f * s, cap = StrokeCap.Round
+    )
+
+    // pescoço e cabeça
+    val neckO = pt(shX + NECK * cos(rad(hAng)), shY + NECK * sin(rad(hAng)))
+    capsule(shO, neckO, 2.0f * s, 1.9f * s, pal.skin, volume = false)
+    val headO = pt(headX, headY)
+    drawCircle(pal.skin, HEAD_R * s, headO)
+    // cabelo cobrindo o topo da cabeça
+    drawArc(
+        pal.hair, startAngle = -hAng - 105f, sweepAngle = 210f, useCenter = true,
+        topLeft = Offset(headO.x - HEAD_R * s, headO.y - HEAD_R * s),
+        size = Size(HEAD_R * 2f * s, HEAD_R * 2f * s)
+    )
+    drawCircle(Color.White.copy(alpha = 0.16f), HEAD_R * 0.38f * s, Offset(headO.x + LIGHT.x * 2.6f * s, headO.y + LIGHT.y * 2.6f * s))
+
+    // lado da frente
+    leg(legN, p[16], false)
+    arm(armN, false)
 }

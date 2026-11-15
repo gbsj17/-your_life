@@ -42,6 +42,8 @@ import com.yourlife.app.ui.components.AppIcon
 import com.yourlife.app.ui.components.IconBubble
 import com.yourlife.app.ui.components.InfoChip
 import com.yourlife.app.ui.components.SectionTitle
+import com.yourlife.app.ui.components.pressScale
+import com.yourlife.app.ui.components.staggerIn
 import com.yourlife.app.ui.icons.AppIcons
 import com.yourlife.app.ui.theme.Yl
 import java.time.LocalDate
@@ -78,7 +80,7 @@ fun HomeScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Column(Modifier.padding(top = 8.dp)) {
+            Column(Modifier.padding(top = 8.dp).staggerIn(0)) {
                 Text(greeting, style = MaterialTheme.typography.headlineLarge)
                 Text(
                     if (trainedToday) "Treino de hoje feito. Bom trabalho!" else "Pronto para treinar hoje?",
@@ -107,7 +109,8 @@ fun HomeScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
 @Composable
 private fun HeroCard(plan: Plan, label: String, trainedToday: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(26.dp)
-    Surface(onClick = onClick, shape = shape, color = Color.Transparent) {
+    val src = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Surface(onClick = onClick, interactionSource = src, modifier = Modifier.staggerIn(2).pressScale(src), shape = shape, color = Color.Transparent) {
         Box(
             Modifier
                 .fillMaxWidth()
@@ -149,7 +152,7 @@ private fun HeroCard(plan: Plan, label: String, trainedToday: Boolean, onClick: 
 @Composable
 private fun WeekStrip(vm: AppViewModel, today: LocalDate) {
     val scheme = MaterialTheme.colorScheme
-    AppCard {
+    AppCard(Modifier.staggerIn(3)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -222,7 +225,7 @@ private fun PlanProgressCard(
     val planned = Programs.plannedTotal(e)
     val done = vm.history.count { java.time.LocalDate.parse(it.date).toEpochDay() >= e.startDay }
     val remaining = (planned - done).coerceAtLeast(0)
-    AppCard {
+    AppCard(Modifier.staggerIn(1)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -271,7 +274,7 @@ private fun ModeChip(text: String, selected: Boolean, modifier: Modifier, onClic
 
 @Composable
 private fun NoPlanCard(onClick: () -> Unit) {
-    AppCard(onClick = onClick) {
+    AppCard(Modifier.staggerIn(1), onClick = onClick) {
         Row(
             Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,

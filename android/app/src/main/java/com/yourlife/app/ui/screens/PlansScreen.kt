@@ -31,6 +31,7 @@ import com.yourlife.app.ui.components.InfoChip
 import com.yourlife.app.ui.components.PrimaryButton
 import com.yourlife.app.ui.components.SecondaryButton
 import com.yourlife.app.ui.components.SectionTitle
+import com.yourlife.app.ui.components.staggerIn
 import com.yourlife.app.ui.icons.AppIcons
 
 private val DAYS = listOf("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
@@ -46,7 +47,7 @@ fun PlansScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Column(Modifier.padding(top = 8.dp)) {
+            Column(Modifier.padding(top = 8.dp).staggerIn(0)) {
                 Text("Planos", style = MaterialTheme.typography.headlineLarge)
                 Text(
                     "Programas por objetivo, com níveis e dias definidos por você.",
@@ -79,7 +80,7 @@ fun PlansScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
 @Composable
 private fun MyPlanCard(vm: AppViewModel, st: ProgramStatus) {
     val scheme = MaterialTheme.colorScheme
-    AppCard {
+    AppCard(Modifier.staggerIn(1)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("MEU PLANO", style = MaterialTheme.typography.labelMedium, color = scheme.primary)
             Text(st.program.name, style = MaterialTheme.typography.titleLarge)
