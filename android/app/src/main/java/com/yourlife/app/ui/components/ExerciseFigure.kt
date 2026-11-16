@@ -28,14 +28,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import coil.ImageLoader
-import coil.compose.AsyncImage
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
-import com.yourlife.app.data.GifMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -101,8 +93,6 @@ private fun mix(a: FloatArray, b: FloatArray, t: Float): FloatArray {
  * Boneco articulado que repete o movimento do exercício (pose A -> pose B -> pose A).
  * Quando `animate` é falso, mostra só a pose inicial.
  */
-private var gifLoader: ImageLoader? = null
-
 @Composable
 fun ExerciseFigure(
     exercise: Exercise,
@@ -143,9 +133,6 @@ fun ExerciseFigure(
 
     val inB by remember { derivedStateOf { progress.value >= 0.5f } }
 
-    val gifUrl = GifMap.url(exercise.anim)
-    var gifOk by remember(gifUrl) { mutableStateOf(false) }
-
     Box(
         modifier
             .fillMaxWidth()
@@ -156,22 +143,7 @@ fun ExerciseFigure(
         Canvas(Modifier.fillMaxSize()) {
             drawFigure(geo.props, mix(geo.a, geo.b, progress.value), palette, propColor, groundColor, geo.front)
         }
-        if (gifUrl != null) {
-            val ctx = LocalContext.current
-            val loader = gifLoader ?: ImageLoader.Builder(ctx.applicationContext)
-                .components { add(ImageDecoderDecoder.Factory()) }.build().also { gifLoader = it }
-            Box(Modifier.fillMaxSize().background(if (gifOk) Color.White else Color.Transparent)) {
-                AsyncImage(
-                    model = ImageRequest.Builder(ctx).data(gifUrl).crossfade(true).build(),
-                    imageLoader = loader,
-                    contentDescription = exercise.name,
-                    contentScale = ContentScale.Fit,
-                    onSuccess = { gifOk = true },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-        if (showPhase && !gifOk) {
+        if (showPhase) {
             Surface(
                 modifier = Modifier.align(Alignment.TopStart).padding(10.dp),
                 shape = RoundedCornerShape(50),
