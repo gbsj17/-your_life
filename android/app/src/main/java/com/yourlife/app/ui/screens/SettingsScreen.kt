@@ -4,7 +4,17 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -152,17 +162,34 @@ fun SettingsScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
         item { SectionTitle("Sobre", Modifier.padding(top = 8.dp)) }
         item {
             AppCard {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Your Life", style = MaterialTheme.typography.titleMedium)
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        IconBubble(AppIcons.Dumbbell)
+                        Column {
+                            Text("Your Life", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Versão ${versionName(context)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                     Text(
-                        "Versão ${versionName(context)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "Treinos em casa, só com o peso do corpo, para ganhar massa magra e reduzir a gordura. " +
+                            "Você escolhe um programa por objetivo, em três níveis, com semanas mais leves para recuperar, " +
+                            "vê o plano do mês e troca por outro mais fácil o exercício que não conseguir fazer. " +
+                            "O app estima as calorias, lembra você de treinar e se atualiza sozinho.",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
                         "Seu histórico fica salvo só neste aparelho.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "Desenvolvido pela RUNEbyte.",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -172,7 +199,6 @@ fun SettingsScreen(vm: AppViewModel, bottomPadding: PaddingValues) {
         item { ReminderCard(vm) }
         item { SectionTitle("Seu peso", Modifier.padding(top = 8.dp)) }
         item { WeightCard(vm) }
-        item { SectionTitle("Base científica", Modifier.padding(top = 8.dp)) }
         item { SourcesCard() }
 
         item { SectionTitle("Atualização", Modifier.padding(top = 8.dp)) }
@@ -380,17 +406,34 @@ private val SOURCES = listOf(
 @Composable
 private fun SourcesCard() {
     val uri = LocalUriHandler.current
-    AppCard {
+    var open by remember { mutableStateOf(false) }
+    val angle by animateFloatAsState(if (open) 90f else 0f, label = "chevron")
+    AppCard(onClick = { open = !open }, modifier = Modifier.animateContentSize()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                "De onde vêm as orientações do app. A divisão exata das semanas e a escala por nível são adaptações do app, não protocolos de um estudo.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            SOURCES.forEach { src ->
-                Column(Modifier.clickable { uri.openUri(src.url) }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(src.title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                    Text(src.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Base científica", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "${SOURCES.size} fontes por trás das orientações do app",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                AppIcon(AppIcons.Chevron, modifier = Modifier.rotate(angle), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            AnimatedVisibility(open) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "A divisão exata das semanas e a escala por nível são adaptações do app, não protocolos de um estudo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    SOURCES.forEach { src ->
+                        Column(Modifier.clickable { uri.openUri(src.url) }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(src.title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(src.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
         }
